@@ -275,7 +275,7 @@ export default function AdminSettingsPage() {
             { id: "PAYMENTS" as const, label: "💳 Payment Gateways", desc: "Razorpay & Cash on Delivery" },
             { id: "WAREHOUSE" as const, label: "📦 Panipat Logistics", desc: "Warehouse Address & Courier" },
             { id: "SEO" as const, label: "🌐 SEO & Socials", desc: "Meta descriptions & Instagram" },
-            { id: "THEMES" as const, label: "🎨 Theme & Font Engine", desc: "Palettes & Site Typography" },
+            // { id: "THEMES" as const, label: "🎨 Theme & Font Engine", desc: "Palettes & Site Typography" },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -1005,11 +1005,10 @@ export default function AdminSettingsPage() {
           </div>
         )}
 
-        {/* ==================== TAB 7: ELEGANT LUXURY THEME PRESETS & TYPOGRAPHY STUDIO ==================== */}
-        {activeTab === "THEMES" && (
+        {/* ==================== TAB 7: ELEGANT LUXURY THEME PRESETS & TYPOGRAPHY STUDIO (Commented Out) ==================== */}
+        {/* {activeTab === "THEMES" && (
           <div className="space-y-6">
             
-            {/* 🔀 Sub-Tab Toggle Switcher: Color Themes vs Website Fonts */}
             <div className="flex justify-center sm:justify-start">
               <div className={`inline-flex p-1.5 rounded-2xl border shadow-sm ${
                 isLight ? "bg-slate-200/80 border-zinc-300" : "bg-zinc-950 border-zinc-800"
@@ -1050,11 +1049,9 @@ export default function AdminSettingsPage() {
               </div>
             </div>
 
-            {/* SUB TAB 1: COLOR THEME PRESETS */}
             {themeSubTab === "COLORS" && (
               <div className="space-y-8 animate-fade-in">
                 
-                {/* Curated Presets Grid Section */}
                 <div className={`${bgCard} p-6 sm:p-8 rounded-3xl border space-y-6`}>
                   <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b ${borderDivider}`}>
                     <div>
@@ -1071,7 +1068,6 @@ export default function AdminSettingsPage() {
                     </div>
                   </div>
 
-                  {/* Curated Theme Cards Grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {Object.values(THEME_PRESETS).map((t) => {
                       const isActive = themeId === t.id;
@@ -1088,7 +1084,6 @@ export default function AdminSettingsPage() {
                           }`}
                         >
                           <div className="space-y-3">
-                            {/* Title & Emoji Header */}
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
                                 <span className="text-xl">{t.colorDot}</span>
@@ -1101,7 +1096,6 @@ export default function AdminSettingsPage() {
                               )}
                             </div>
 
-                            {/* Dual Color Swatch Bar */}
                             <div className="flex items-center gap-2 p-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
                               <div
                                 style={{ backgroundColor: t.primaryColor }}
@@ -1145,7 +1139,6 @@ export default function AdminSettingsPage() {
                   </div>
                 </div>
 
-                {/* ✨ Custom Theme Studio (Standalone Card) */}
                 <div className={`${bgCard} p-6 sm:p-8 rounded-3xl border space-y-6`}>
                   <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b ${borderDivider}`}>
                     <div>
@@ -1158,7 +1151,6 @@ export default function AdminSettingsPage() {
                   </div>
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Form Controls */}
                     <div className="space-y-4">
                       <div>
                         <label className={`font-bold block mb-1.5 ${textTitle}`}>Custom Theme Name *</label>
@@ -1219,7 +1211,6 @@ export default function AdminSettingsPage() {
                       </button>
                     </div>
 
-                    {/* Real-time Component Preview Mockup */}
                     <div className={`p-5 rounded-2xl border space-y-4 ${innerCardBg}`}>
                       <div className="flex justify-between items-center pb-2 border-b border-zinc-200 dark:border-zinc-800">
                         <span className="font-bold text-xs">Live Storefront Preview</span>
@@ -1270,11 +1261,9 @@ export default function AdminSettingsPage() {
               </div>
             )}
 
-            {/* SUB TAB 2: STOREFRONT TYPOGRAPHY & GOOGLE FONTS */}
             {themeSubTab === "FONTS" && (
               <div className="space-y-8 animate-fade-in">
                 
-                {/* 🔤 Global Site Typography & Font Studio Section */}
                 <div className={`${bgCard} p-6 sm:p-8 rounded-3xl border space-y-6`}>
                   <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b ${borderDivider}`}>
                     <div>
@@ -1288,7 +1277,6 @@ export default function AdminSettingsPage() {
                     </span>
                   </div>
 
-                  {/* Font Presets Grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {Object.values(FONT_PRESETS).map((f) => {
                       const isActive = fontId === f.id;
@@ -1314,7 +1302,6 @@ export default function AdminSettingsPage() {
                               )}
                             </div>
 
-                            {/* Live Font Sample Preview */}
                             <div className="p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 space-y-1">
                               <span
                                 style={{ fontFamily: f.headingFont }}
@@ -1357,7 +1344,6 @@ export default function AdminSettingsPage() {
                     })}
                   </div>
 
-                  {/* Custom Google Font Loader Form */}
                   <div className={`p-6 rounded-2xl border space-y-4 pt-6 border-t ${borderDivider}`}>
                     <h3 className={`font-serif text-base font-bold ${textTitle}`}>✨ Custom Google Font Name Loader</h3>
                     <p className={`${textSub} text-xs`}>Type any font family from <a href="https://fonts.google.com" target="_blank" rel="noreferrer" className="underline font-bold text-amber-600">Google Fonts</a> (e.g. <code>Bodoni Moda</code>, <code>Great Vibes</code>, <code>Cinzel</code>, <code>Italiana</code>) to load it live.</p>
@@ -1386,7 +1372,7 @@ export default function AdminSettingsPage() {
             )}
 
           </div>
-        )}
+        )} */}
 
         {/* Save All Settings Action Bar */}
         <div className="pt-4">

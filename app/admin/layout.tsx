@@ -131,8 +131,8 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 
           <div className="flex items-center gap-3 text-xs">
             
-            {/* 🎨 Multi-Theme Preset Dropdown Selector */}
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border font-bold text-xs shadow-sm transition-all ${
+            {/* 🎨 Multi-Theme Preset Dropdown Selector (Commented Out) */}
+            {/* <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border font-bold text-xs shadow-sm transition-all ${
               isLight
                 ? "bg-slate-100/90 text-zinc-900 border-zinc-200 hover:border-zinc-300"
                 : "bg-zinc-900 text-zinc-100 border-zinc-700 hover:border-zinc-600"
@@ -160,10 +160,10 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
                   ✨ {customTheme?.name || "Custom Theme"}
                 </option>
               </select>
-            </div>
+            </div> */}
 
-            {/* 🔤 Font Preset Dropdown Selector */}
-            <div className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border font-bold text-xs shadow-sm transition-all ${
+            {/* 🔤 Font Preset Dropdown Selector (Commented Out) */}
+            {/* <div className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border font-bold text-xs shadow-sm transition-all ${
               isLight
                 ? "bg-slate-100/90 text-zinc-900 border-zinc-200 hover:border-zinc-300"
                 : "bg-zinc-900 text-zinc-100 border-zinc-700 hover:border-zinc-600"
@@ -191,7 +191,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
                   ✨ {currentFont?.name || "Custom Font"}
                 </option>
               </select>
-            </div>
+            </div> */}
 
             {/* Dark / Light Mode Switcher */}
             <button
