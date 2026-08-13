@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
@@ -10,6 +10,123 @@ import { Pagination } from "@/components/common/Pagination";
 import { MOCK_PRODUCTS, CATEGORIES, Product } from "@/lib/mock-data";
 import { useCart } from "@/context/CartContext";
 import Link from "next/link";
+
+interface FilterContentProps {
+  selectedCategory: string;
+  setSelectedCategory: (cat: string) => void;
+  selectedSize: string;
+  setSelectedSize: (size: string) => void;
+  priceRange: string;
+  setPriceRange: (range: string) => void;
+}
+
+function FilterContent({
+  selectedCategory,
+  setSelectedCategory,
+  selectedSize,
+  setSelectedSize,
+  priceRange,
+  setPriceRange,
+}: FilterContentProps) {
+  return (
+    <>
+      {/* Category Filter */}
+      <div>
+        <h3 className="font-serif text-sm font-bold text-zinc-900 uppercase tracking-wider mb-3">
+          Categories
+        </h3>
+        <div className="space-y-1.5 text-xs">
+          <button
+            onClick={() => setSelectedCategory("ALL")}
+            className={`w-full text-left px-3 py-2 rounded-lg font-medium transition-colors ${selectedCategory === "ALL"
+                ? "bg-[#9b1c31] text-white font-bold"
+                : "text-zinc-700 hover:bg-amber-50"
+              }`}
+          >
+            All Collections
+          </button>
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.slug)}
+              className={`w-full text-left px-3 py-2 rounded-lg font-medium transition-colors flex justify-between items-center ${selectedCategory === cat.slug
+                  ? "bg-[#9b1c31] text-white font-bold"
+                  : "text-zinc-700 hover:bg-amber-50"
+                }`}
+            >
+              <span>{cat.name}</span>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded ${selectedCategory === cat.slug ? "bg-white/20 text-white" : "bg-zinc-100 text-zinc-500"
+                }`}>
+                {cat.itemCount}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Size Filter */}
+      <div className="pt-4 border-t border-zinc-100">
+        <h3 className="font-serif text-sm font-bold text-zinc-900 uppercase tracking-wider mb-3">
+          Filter by Size
+        </h3>
+        <div className="flex flex-wrap gap-1.5 text-xs">
+          {["ALL", "S", "M", "L", "XL", "XXL"].map((sz) => (
+            <button
+              key={sz}
+              onClick={() => setSelectedSize(sz)}
+              className={`px-3 py-1 rounded border font-semibold transition-all ${selectedSize === sz
+                  ? "bg-[#9b1c31] text-white border-[#9b1c31]"
+                  : "bg-zinc-50 text-zinc-700 border-zinc-200 hover:border-amber-600"
+                }`}
+            >
+              {sz === "ALL" ? "All Sizes" : sz}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Price Range Filter */}
+      <div className="pt-4 border-t border-zinc-100">
+        <h3 className="font-serif text-sm font-bold text-zinc-900 uppercase tracking-wider mb-3">
+          Price Range
+        </h3>
+        <div className="space-y-1 text-xs">
+          {[
+            { id: "ALL", label: "All Prices" },
+            { id: "UNDER_2000", label: "Under ₹2,000" },
+            { id: "2000_3500", label: "₹2,000 – ₹3,500" },
+            { id: "ABOVE_3500", label: "Above ₹3,500" }
+          ].map((p) => (
+            <label key={p.id} className="flex items-center gap-2 cursor-pointer py-1 text-zinc-700 hover:text-[#9b1c31]">
+              <input
+                type="radio"
+                name="priceRange"
+                checked={priceRange === p.id}
+                onChange={() => setPriceRange(p.id)}
+                className="accent-[#9b1c31]"
+              />
+              <span>{p.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Clear Filters Button */}
+      {(selectedCategory !== "ALL" || selectedSize !== "ALL" || priceRange !== "ALL") && (
+        <button
+          onClick={() => {
+            setSelectedCategory("ALL");
+            setSelectedSize("ALL");
+            setPriceRange("ALL");
+          }}
+          className="w-full text-xs font-bold text-red-600 hover:text-red-800 py-2 border border-red-200 rounded-lg bg-red-50 text-center block mt-4"
+        >
+          Reset All Filters
+        </button>
+      )}
+    </>
+  );
+}
 
 function ProductsContent() {
   const searchParams = useSearchParams();
@@ -27,6 +144,21 @@ function ProductsContent() {
   const [selectedSizes, setSelectedSizes] = useState<{ [productId: string]: string }>({});
 
   const formatCurrency = (paise: number) => `₹${(paise / 100).toLocaleString("en-IN")}`;
+
+  // Lock body & html scroll when mobile filter drawer is open
+  useEffect(() => {
+    if (isMobileFilterOpen) {
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
+    } else {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+    };
+  }, [isMobileFilterOpen]);
 
   // Filter Logic
   let filtered = MOCK_PRODUCTS.filter((product) => {
@@ -88,11 +220,13 @@ function ProductsContent() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-8 border-b border-amber-900/10">
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
-            className="lg:hidden bg-white border border-zinc-300 text-zinc-800 text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-2"
+            onClick={() => setIsMobileFilterOpen(true)}
+            className="lg:hidden bg-white border border-zinc-300 text-zinc-800 text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-2 shadow-xs active:scale-95 transition-transform"
           >
             <span>⚙️ Filters</span>
-            {selectedCategory !== "ALL" && <span className="w-2 h-2 rounded-full bg-[#9b1c31]" />}
+            {(selectedCategory !== "ALL" || selectedSize !== "ALL" || priceRange !== "ALL") && (
+              <span className="w-2 h-2 rounded-full bg-[#9b1c31]" />
+            )}
           </button>
           <span className="text-xs text-zinc-500 font-medium">
             Showing <strong>{filtered.length}</strong> products
@@ -115,106 +249,74 @@ function ProductsContent() {
         </div>
       </div>
 
+      {/* Mobile Filter Slide-Over Drawer Modal */}
+      {isMobileFilterOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-fade-in"
+            onClick={() => setIsMobileFilterOpen(false)}
+          />
+          <div className="fixed inset-y-0 left-0 w-full max-w-xs bg-white shadow-2xl flex flex-col z-10 animate-slide-right font-sans">
+            <div className="p-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50 shrink-0">
+              <h3 className="font-serif text-sm font-bold text-zinc-900 uppercase tracking-wider">
+                Filter Catalog
+              </h3>
+              <button
+                onClick={() => setIsMobileFilterOpen(false)}
+                className="p-2 text-zinc-500 hover:text-black rounded-lg hover:bg-zinc-200 transition-colors"
+                aria-label="Close filters"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <FilterContent
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+                selectedSize={selectedSize}
+                setSelectedSize={setSelectedSize}
+                priceRange={priceRange}
+                setPriceRange={setPriceRange}
+              />
+            </div>
+
+            <div className="p-4 border-t border-zinc-100 bg-zinc-50 flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => {
+                  setSelectedCategory("ALL");
+                  setSelectedSize("ALL");
+                  setPriceRange("ALL");
+                }}
+                className="flex-1 text-xs font-bold text-zinc-700 bg-white border border-zinc-300 py-2.5 rounded-lg text-center"
+              >
+                Reset All
+              </button>
+              <button
+                onClick={() => setIsMobileFilterOpen(false)}
+                className="flex-1 text-xs font-bold text-white bg-[#9b1c31] py-2.5 rounded-lg text-center shadow-md"
+              >
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
 
-        {/* Left Sidebar Filters (Desktop + Responsive Drawer) */}
-        <aside className={`lg:block ${isMobileFilterOpen ? "block" : "hidden"} space-y-6 bg-white p-6 rounded-2xl border border-amber-900/10 h-fit sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto no-scrollbar`}>
-
-          {/* Category Filter */}
-          <div>
-            <h3 className="font-serif text-sm font-bold text-zinc-900 uppercase tracking-wider mb-3">
-              Categories
-            </h3>
-            <div className="space-y-1.5 text-xs">
-              <button
-                onClick={() => setSelectedCategory("ALL")}
-                className={`w-full text-left px-3 py-2 rounded-lg font-medium transition-colors ${selectedCategory === "ALL"
-                    ? "bg-[#9b1c31] text-white font-bold"
-                    : "text-zinc-700 hover:bg-amber-50"
-                  }`}
-              >
-                All Collections
-              </button>
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.slug)}
-                  className={`w-full text-left px-3 py-2 rounded-lg font-medium transition-colors flex justify-between items-center ${selectedCategory === cat.slug
-                      ? "bg-[#9b1c31] text-white font-bold"
-                      : "text-zinc-700 hover:bg-amber-50"
-                    }`}
-                >
-                  <span>{cat.name}</span>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded ${selectedCategory === cat.slug ? "bg-white/20 text-white" : "bg-zinc-100 text-zinc-500"
-                    }`}>
-                    {cat.itemCount}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Size Filter */}
-          <div className="pt-4 border-t border-zinc-100">
-            <h3 className="font-serif text-sm font-bold text-zinc-900 uppercase tracking-wider mb-3">
-              Filter by Size
-            </h3>
-            <div className="flex flex-wrap gap-1.5 text-xs">
-              {["ALL", "S", "M", "L", "XL", "XXL"].map((sz) => (
-                <button
-                  key={sz}
-                  onClick={() => setSelectedSize(sz)}
-                  className={`px-3 py-1 rounded border font-semibold transition-all ${selectedSize === sz
-                      ? "bg-[#9b1c31] text-white border-[#9b1c31]"
-                      : "bg-zinc-50 text-zinc-700 border-zinc-200 hover:border-amber-600"
-                    }`}
-                >
-                  {sz === "ALL" ? "All Sizes" : sz}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Price Range Filter */}
-          <div className="pt-4 border-t border-zinc-100">
-            <h3 className="font-serif text-sm font-bold text-zinc-900 uppercase tracking-wider mb-3">
-              Price Range
-            </h3>
-            <div className="space-y-1 text-xs">
-              {[
-                { id: "ALL", label: "All Prices" },
-                { id: "UNDER_2000", label: "Under ₹2,000" },
-                { id: "2000_3500", label: "₹2,000 – ₹3,500" },
-                { id: "ABOVE_3500", label: "Above ₹3,500" }
-              ].map((p) => (
-                <label key={p.id} className="flex items-center gap-2 cursor-pointer py-1 text-zinc-700 hover:text-[#9b1c31]">
-                  <input
-                    type="radio"
-                    name="priceRange"
-                    checked={priceRange === p.id}
-                    onChange={() => setPriceRange(p.id)}
-                    className="accent-[#9b1c31]"
-                  />
-                  <span>{p.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Clear Filters Button */}
-          {(selectedCategory !== "ALL" || selectedSize !== "ALL" || priceRange !== "ALL") && (
-            <button
-              onClick={() => {
-                setSelectedCategory("ALL");
-                setSelectedSize("ALL");
-                setPriceRange("ALL");
-              }}
-              className="w-full text-xs font-bold text-red-600 hover:text-red-800 py-2 border border-red-200 rounded-lg bg-red-50 text-center block"
-            >
-              Reset All Filters
-            </button>
-          )}
-
+        {/* Left Sidebar Filters (Desktop Only) */}
+        <aside className="hidden lg:block space-y-6 bg-white p-6 rounded-2xl border border-amber-900/10 h-fit sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto no-scrollbar">
+          <FilterContent
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+            selectedSize={selectedSize}
+            setSelectedSize={setSelectedSize}
+            priceRange={priceRange}
+            setPriceRange={setPriceRange}
+          />
         </aside>
 
         {/* Product Grid Area */}

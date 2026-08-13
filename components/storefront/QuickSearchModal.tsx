@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { MOCK_PRODUCTS } from "@/lib/mock-data";
@@ -8,6 +8,20 @@ import { MOCK_PRODUCTS } from "@/lib/mock-data";
 export const QuickSearchModal: React.FC = () => {
   const { isSearchOpen, closeSearch } = useCart();
   const [query, setQuery] = useState("");
+
+  useEffect(() => {
+    if (isSearchOpen) {
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
+    } else {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+    };
+  }, [isSearchOpen]);
 
   if (!isSearchOpen) return null;
 
@@ -26,7 +40,7 @@ export const QuickSearchModal: React.FC = () => {
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Dark Overlay */}
       <div
-        className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity animate-fade-in"
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity animate-fade-in touch-none"
         onClick={closeSearch}
       />
 
@@ -71,7 +85,7 @@ export const QuickSearchModal: React.FC = () => {
           </div>
 
           {/* Search Results List */}
-          <div className="max-h-96 overflow-y-auto p-6 space-y-3">
+          <div className="max-h-96 overflow-y-auto overscroll-contain p-6 space-y-3">
             {query.trim() === "" ? (
               <div className="text-center py-8 text-zinc-400 text-xs">
                 Start typing to search across all Panipat handcrafted collections.

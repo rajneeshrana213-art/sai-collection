@@ -49,11 +49,20 @@ export const Header: React.FC = () => {
     setCurrentSlideIndex((prev) => (prev + 1) % ANNOUNCEMENTS.length);
   };
 
-  const isClient = useSyncExternalStore(
-    () => () => { },
-    () => true,
-    () => undefined
-  );
+  // Lock body & html scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
+    } else {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+    };
+  }, [isMobileMenuOpen]);
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-zinc-200/80 transition-all font-sans">
@@ -121,14 +130,14 @@ export const Header: React.FC = () => {
       </div>
 
       {/* 2. Main Navigation Header */}
-      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-18 sm:h-20 gap-4">
+      <div className="w-full mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 sm:h-20 gap-2 sm:gap-4">
 
           {/* Mobile Menu Trigger & Search */}
-          <div className="flex items-center gap-1 lg:hidden">
+          <div className="flex items-center gap-0.5 sm:gap-1 lg:hidden shrink-0">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="p-2.5 rounded-lg text-zinc-800 hover:text-black hover:bg-zinc-100 transition-colors"
+              className="p-2 rounded-lg text-zinc-800 hover:text-black hover:bg-zinc-100 transition-colors"
               aria-label="Open menu"
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -138,7 +147,7 @@ export const Header: React.FC = () => {
 
             <button
               onClick={openSearch}
-              className="p-2.5 text-zinc-800 hover:text-black transition-colors rounded-lg hover:bg-zinc-100"
+              className="p-2 text-zinc-800 hover:text-black transition-colors rounded-lg hover:bg-zinc-100"
               aria-label="Search products"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -148,12 +157,12 @@ export const Header: React.FC = () => {
           </div>
 
           {/* Brand Logo */}
-          <div className="flex items-center justify-center lg:justify-start">
-            <Link href="/" className="group flex flex-col items-center lg:items-start">
-              <span className="font-great-vibes text-4xl sm:text-5xl font-normal tracking-wide text-zinc-950 capitalize group-hover:text-amber-900 transition-colors leading-tight pt-1">
+          <div className="flex items-center justify-center lg:justify-start min-w-0 flex-1 lg:flex-initial">
+            <Link href="/" className="group flex flex-col items-center lg:items-start text-center lg:text-left">
+              <span className="font-great-vibes text-2xl sm:text-4xl lg:text-5xl font-normal tracking-wide text-zinc-950 capitalize group-hover:text-amber-900 transition-colors leading-tight pt-0.5 whitespace-nowrap">
                 Sai Collection
               </span>
-              <span className="text-[9px] sm:text-[10px] font-sans font-semibold tracking-[0.3em] text-amber-800 uppercase -mt-0.5">
+              <span className="text-[8px] sm:text-[10px] font-sans font-semibold tracking-[0.18em] sm:tracking-[0.3em] text-amber-800 uppercase -mt-0.5 whitespace-nowrap">
                 Panipat Ethnic Wear
               </span>
             </Link>
@@ -242,7 +251,7 @@ export const Header: React.FC = () => {
           </nav>
 
           {/* Right Action Icons & Buttons */}
-          <div className="flex items-center gap-1.5 sm:gap-3">
+          <div className="flex items-center gap-1 sm:gap-3 shrink-0">
 
             {/* Desktop Search Button */}
             <button
@@ -259,7 +268,7 @@ export const Header: React.FC = () => {
             {/* Wishlist Button */}
             <Link
               href="/account/wishlist"
-              className="p-2.5 text-zinc-700 hover:text-black transition-colors relative rounded-full hover:bg-zinc-100"
+              className="p-2 sm:p-2.5 text-zinc-700 hover:text-black transition-colors relative rounded-full hover:bg-zinc-100"
               aria-label="Wishlist"
               title="Wishlist"
             >
@@ -267,7 +276,7 @@ export const Header: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
               {wishlist.length > 0 && (
-                <span className="absolute top-1 right-1 bg-amber-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                <span className="absolute top-0.5 right-0.5 bg-amber-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
                   {wishlist.length}
                 </span>
               )}
@@ -289,7 +298,7 @@ export const Header: React.FC = () => {
             {/* Cart Button */}
             <button
               onClick={openCart}
-              className="bg-zinc-950 hover:bg-black text-white px-3.5 py-2.5 rounded-lg flex items-center gap-2 transition-all transform active:scale-95 text-xs font-bold uppercase tracking-widest shadow-sm ml-1"
+              className="bg-zinc-950 hover:bg-black text-white px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-lg flex items-center gap-1.5 sm:gap-2 transition-all transform active:scale-95 text-xs font-bold uppercase tracking-wider sm:tracking-widest shadow-sm ml-0.5 sm:ml-1"
               aria-label="Open Shopping Cart"
             >
               <div className="relative">
@@ -297,7 +306,8 @@ export const Header: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
               </div>
-              <span>Cart ({totalItems})</span>
+              <span className="hidden sm:inline">Cart</span>
+              <span>({totalItems})</span>
             </button>
 
           </div>
@@ -307,148 +317,182 @@ export const Header: React.FC = () => {
 
       {/* 3. Mobile Navigation Drawer Overlay & Panel */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden flex">
+        <div className="fixed inset-0 z-50 lg:hidden">
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
-            onClick={() => setIsMobileMenuOpen(false)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-fade-in touch-none"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              setIsMobileCategoryOpen(false);
+            }}
           />
 
-          {/* Drawer Container */}
-          <div className="relative w-full max-w-xs bg-white h-full shadow-2xl flex flex-col justify-between overflow-y-auto font-sans z-10 animate-slide-right">
+          {/* Drawer Panel */}
+          <div className="fixed inset-y-0 left-0 h-screen h-[100dvh] w-[85vw] max-w-xs bg-white shadow-2xl flex flex-col font-sans z-50 animate-slide-right overflow-hidden">
 
-            {/* Drawer Header */}
-            <div>
-              <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50">
-                <div className="flex flex-col">
-                  <span className="font-great-vibes text-3xl font-normal tracking-wide text-zinc-950 capitalize pt-1">
-                    Sai Collection
-                  </span>
-                  <span className="text-[9px] font-sans font-semibold text-amber-800 uppercase tracking-wider">
-                    Panipat Ethnic Wear
-                  </span>
-                </div>
-                <button
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 text-zinc-500 hover:text-black rounded-lg hover:bg-zinc-200 transition-colors"
-                  aria-label="Close menu"
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+            {/* Drawer Header (Fixed at Top) */}
+            <div className="p-4 sm:p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50 shrink-0">
+              <div className="flex flex-col">
+                <span className="font-great-vibes text-3xl font-normal tracking-wide text-zinc-950 capitalize pt-1">
+                  Sai Collection
+                </span>
+                <span className="text-[9px] font-sans font-semibold text-amber-800 uppercase tracking-wider">
+                  Panipat Ethnic Wear
+                </span>
               </div>
-
-              {/* Mobile Drawer Menu Links */}
-              <div className="p-4 space-y-1 text-xs font-semibold uppercase tracking-wider text-zinc-800">
-                <Link
-                  href="/"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block px-3 py-3 rounded-lg hover:bg-zinc-100 transition-colors"
-                >
-                  Home
-                </Link>
-
-                <Link
-                  href="/products?category=new-arrivals"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block px-3 py-3 rounded-lg hover:bg-zinc-100 transition-colors"
-                >
-                  New Arrivals
-                </Link>
-
-                {/* Category Accordion */}
-                <div>
-                  <button
-                    onClick={() => setIsMobileCategoryOpen(!isMobileCategoryOpen)}
-                    className="w-full flex items-center justify-between px-3 py-3 rounded-lg hover:bg-zinc-100 transition-colors text-left uppercase font-semibold"
-                  >
-                    <span>Shop By Category</span>
-                    <svg
-                      className={`w-4 h-4 text-zinc-500 transition-transform ${isMobileCategoryOpen ? "rotate-180" : ""}`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-
-                  {isMobileCategoryOpen && (
-                    <div className="ml-3 pl-3 border-l border-zinc-200 my-1 space-y-1 text-zinc-600 font-normal">
-                      {CATEGORIES.map((item, idx) => (
-                        <Link
-                          key={idx}
-                          href={`/products?category=${item.slug}`}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                          className="block py-2 px-2 text-[11px] font-medium hover:text-amber-900 transition-colors"
-                        >
-                          {item.label}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <Link
-                  href="/products"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block px-3 py-3 rounded-lg hover:bg-zinc-100 transition-colors"
-                >
-                  All Products
-                </Link>
-
-                <Link
-                  href="/products?onSale=true"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center justify-between px-3 py-3 rounded-lg text-red-600 font-bold hover:bg-red-50 transition-colors"
-                >
-                  <span>Sale</span>
-                  <span className="bg-red-100 text-red-600 text-[9px] px-1.5 py-0.5 rounded font-extrabold">
-                    HOT
-                  </span>
-                </Link>
-
-                <Link
-                  href="/about"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block px-3 py-3 rounded-lg hover:bg-zinc-100 transition-colors"
-                >
-                  About Us
-                </Link>
-
-                <Link
-                  href="/track-order"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block px-3 py-3 rounded-lg hover:bg-zinc-100 transition-colors text-zinc-600"
-                >
-                  Track Order
-                </Link>
-
-                <Link
-                  href="/size-guide"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block px-3 py-3 rounded-lg hover:bg-zinc-100 transition-colors text-zinc-600"
-                >
-                  Size Guide
-                </Link>
-
-                <Link
-                  href="/contact"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block px-3 py-3 rounded-lg hover:bg-zinc-100 transition-colors text-zinc-600"
-                >
-                  Contact Us
-                </Link>
-              </div>
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setIsMobileCategoryOpen(false);
+                }}
+                className="p-2 text-zinc-500 hover:text-black rounded-lg hover:bg-zinc-200 transition-colors"
+                aria-label="Close menu"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
 
-            {/* Drawer Footer Actions */}
-            <div className="p-4 border-t border-zinc-100 bg-zinc-50 space-y-2">
+            {/* Mobile Drawer Menu Links (Scrollable Body) */}
+            <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-1 text-xs font-semibold uppercase tracking-wider text-zinc-800">
+              <Link
+                href="/"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setIsMobileCategoryOpen(false);
+                }}
+                className="block px-3 py-3 rounded-lg hover:bg-zinc-100 transition-colors"
+              >
+                Home
+              </Link>
+
+              <Link
+                href="/products?category=new-arrivals"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setIsMobileCategoryOpen(false);
+                }}
+                className="block px-3 py-3 rounded-lg hover:bg-zinc-100 transition-colors"
+              >
+                New Arrivals
+              </Link>
+
+              {/* Category Accordion */}
+              <div>
+                <button
+                  onClick={() => setIsMobileCategoryOpen(!isMobileCategoryOpen)}
+                  className="w-full flex items-center justify-between px-3 py-3 rounded-lg hover:bg-zinc-100 transition-colors text-left uppercase font-semibold"
+                >
+                  <span>Shop By Category</span>
+                  <svg
+                    className={`w-4 h-4 text-zinc-500 transition-transform duration-200 ${isMobileCategoryOpen ? "rotate-180" : ""}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {isMobileCategoryOpen && (
+                  <div className="ml-3 pl-3 border-l border-zinc-200 my-1 space-y-1 text-zinc-600 font-normal">
+                    {CATEGORIES.map((item, idx) => (
+                      <Link
+                        key={idx}
+                        href={`/products?category=${item.slug}`}
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          setIsMobileCategoryOpen(false);
+                        }}
+                        className="block py-2 px-2 text-[11px] font-medium hover:text-amber-900 transition-colors"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <Link
+                href="/products"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setIsMobileCategoryOpen(false);
+                }}
+                className="block px-3 py-3 rounded-lg hover:bg-zinc-100 transition-colors"
+              >
+                All Products
+              </Link>
+
+              <Link
+                href="/products?onSale=true"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setIsMobileCategoryOpen(false);
+                }}
+                className="flex items-center justify-between px-3 py-3 rounded-lg text-red-600 font-bold hover:bg-red-50 transition-colors"
+              >
+                <span>Sale</span>
+                <span className="bg-red-100 text-red-600 text-[9px] px-1.5 py-0.5 rounded font-extrabold">
+                  HOT
+                </span>
+              </Link>
+
+              <Link
+                href="/about"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setIsMobileCategoryOpen(false);
+                }}
+                className="block px-3 py-3 rounded-lg hover:bg-zinc-100 transition-colors"
+              >
+                About Us
+              </Link>
+
+              <Link
+                href="/track-order"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setIsMobileCategoryOpen(false);
+                }}
+                className="block px-3 py-3 rounded-lg hover:bg-zinc-100 transition-colors text-zinc-600"
+              >
+                Track Order
+              </Link>
+
+              <Link
+                href="/size-guide"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setIsMobileCategoryOpen(false);
+                }}
+                className="block px-3 py-3 rounded-lg hover:bg-zinc-100 transition-colors text-zinc-600"
+              >
+                Size Guide
+              </Link>
+
+              <Link
+                href="/contact"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setIsMobileCategoryOpen(false);
+                }}
+                className="block px-3 py-3 rounded-lg hover:bg-zinc-100 transition-colors text-zinc-600"
+              >
+                Contact Us
+              </Link>
+            </div>
+
+            {/* Drawer Footer Actions (Fixed at Bottom) */}
+            <div className="p-4 border-t border-zinc-100 bg-zinc-50 space-y-2 shrink-0">
               <Link
                 href="/login"
-                onClick={() => setIsMobileMenuOpen(false)}
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setIsMobileCategoryOpen(false);
+                }}
                 className="block bg-zinc-950 text-white text-center w-full py-3 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-black transition-colors"
               >
                 Login / Register
@@ -464,5 +508,3 @@ export const Header: React.FC = () => {
     </header>
   );
 };
-
-
