@@ -1,0 +1,86 @@
+<%- include('partials/header', { subject: subject }) %>
+
+<div style="text-align: center; margin-bottom: 24px;">
+  <span class="badge badge-success">Order Confirmed ✓</span>
+  <h2 style="font-family: Georgia, serif; font-size: 24px; color: #18181b; margin: 16px 0 6px 0;">Thank You For Your Order!</h2>
+  <p style="font-size: 13px; color: #52525b; margin: 0;">
+    Order Number: <strong style="color: #9b1c31;"><%= order.orderNumber %></strong> | Date: <strong><%= order.date %></strong>
+  </p>
+</div>
+
+<!-- Order Summary Box -->
+<div style="background-color: #fafafa; border: 1px solid #e4e4e7; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px;">
+  <table style="width: 100%; font-size: 12px; color: #3f3f46;">
+    <tr>
+      <td style="padding: 4px 0;"><strong>Payment Method:</strong> <%= order.paymentMethod %> (<%= order.paymentStatus %>)</td>
+      <td style="text-align: right; padding: 4px 0;"><strong>Shipping Status:</strong> <%= order.status %></td>
+    </tr>
+    <% if (order.estimatedDelivery) { %>
+    <tr>
+      <td colspan="2" style="padding: 4px 0; color: #9b1c31; font-weight: bold;">
+        Estimated Doorstep Delivery: <%= order.estimatedDelivery %>
+      </td>
+    </tr>
+    <% } %>
+  </table>
+</div>
+
+<!-- Items Table -->
+<h3 style="font-family: Georgia, serif; font-size: 16px; color: #18181b; margin: 0 0 12px 0;">Order Items</h3>
+<table class="item-table">
+  <% order.items.forEach(function(item) { %>
+  <tr>
+    <td style="width: 60px; vertical-align: top;">
+      <% if (item.productImage) { %>
+        <img src="<%= item.productImage %>" alt="<%= item.productName %>" style="width: 52px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid #e4e4e7;" />
+      <% } %>
+    </td>
+    <td style="vertical-align: top; padding-left: 12px;">
+      <div style="font-weight: bold; font-size: 14px; color: #18181b;"><%= item.productName %></div>
+      <div style="font-size: 12px; color: #71717a; margin-top: 4px;">
+        Size: <%= item.variantSize %> <% if (item.variantColor) { %>| Color: <%= item.variantColor %><% } %> | Qty: <%= item.quantity %>
+      </div>
+    </td>
+    <td style="text-align: right; vertical-align: top; font-weight: bold; font-size: 14px; color: #18181b;">
+      ₹<%= ((item.price * item.quantity) / 100).toLocaleString('en-IN') %>
+    </td>
+  </tr>
+  <% }); %>
+</table>
+
+<!-- Price Totals Breakdown -->
+<table style="width: 100%; font-size: 13px; color: #3f3f46; margin-bottom: 24px;">
+  <tr>
+    <td style="padding: 4px 0;">Subtotal:</td>
+    <td style="text-align: right; padding: 4px 0;">₹<%= (order.subtotal / 100).toLocaleString('en-IN') %></td>
+  </tr>
+  <tr>
+    <td style="padding: 4px 0;">Shipping Fee:</td>
+    <td style="text-align: right; padding: 4px 0;"><%= order.shippingFee === 0 ? 'FREE' : '₹' + (order.shippingFee / 100).toLocaleString('en-IN') %></td>
+  </tr>
+  <% if (order.discount && order.discount > 0) { %>
+  <tr>
+    <td style="padding: 4px 0; color: #047857;">Discount Applied:</td>
+    <td style="text-align: right; padding: 4px 0; color: #047857;">-₹<%= (order.discount / 100).toLocaleString('en-IN') %></td>
+  </tr>
+  <% } %>
+  <tr style="font-weight: bold; font-size: 16px; border-top: 1px solid #e4e4e7;">
+    <td style="padding: 10px 0 0 0; color: #18181b;">Total Amount:</td>
+    <td style="text-align: right; padding: 10px 0 0 0; color: #9b1c31;">₹<%= (order.total / 100).toLocaleString('en-IN') %></td>
+  </tr>
+</table>
+
+<!-- Shipping Address Snapshot -->
+<div style="background-color: #fdfbf7; border: 1px solid #f3e8d6; border-radius: 12px; padding: 16px 20px; font-size: 12px; color: #3f3f46; margin-bottom: 24px;">
+  <strong style="font-family: Georgia, serif; font-size: 14px; color: #18181b; display: block; margin-bottom: 6px;">Delivery Destination:</strong>
+  <div style="font-weight: bold; color: #18181b;"><%= order.shippingAddress.fullName %></div>
+  <div><%= order.shippingAddress.line1 %></div>
+  <div><%= order.shippingAddress.city %>, <%= order.shippingAddress.state %> - <%= order.shippingAddress.pincode %></div>
+  <div style="font-weight: 600; color: #9b1c31; margin-top: 4px;">Phone: <%= order.shippingAddress.phone %></div>
+</div>
+
+<div style="text-align: center;">
+  <a href="<%= storefrontUrl %>/account/orders/<%= order.orderNumber %>" class="btn-primary">Track Package Live →</a>
+</div>
+
+<%- include('partials/footer', { storefrontUrl: storefrontUrl }) %>

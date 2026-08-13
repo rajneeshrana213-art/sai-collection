@@ -1,0 +1,28 @@
+<%- include('partials/header', { subject: subject }) %>
+
+<div style="text-align: center; margin-bottom: 24px;">
+  <span class="badge badge-success">Delivered ✓</span>
+  <h2 style="font-family: Georgia, serif; font-size: 24px; color: #18181b; margin: 16px 0 6px 0;">Your Package Has Been Delivered!</h2>
+  <p style="font-size: 13px; color: #52525b; margin: 0;">
+    Order Number: <strong style="color: #9b1c31;"><%= order.orderNumber %></strong>
+  </p>
+</div>
+
+<div style="background-color: #fdfbf7; border: 1px solid #f3e8d6; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 24px;">
+  <p style="font-size: 14px; color: #27272a; line-height: 1.6; margin: 0;">
+    We hope you love your handcrafted Panipat ethnic wear! If you have any questions or need an exchange, our <strong>7-day hassle-free return window</strong> is active.
+  </p>
+</div>
+
+<div style="background-color: #fffbeb; border: 1px dashed #f59e0b; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 24px;">
+  <span style="font-size: 11px; font-weight: bold; color: #b45309; text-transform: uppercase;">Share Your Style</span>
+  <div style="font-size: 13px; color: #78350f; margin-top: 6px;">
+    Tag us on Instagram <strong>@saicollectionpnp</strong> wearing your suit set to get featured on our page!
+  </div>
+</div>
+
+<div style="text-align: center; margin-top: 24px;">
+  <a href="<%= storefrontUrl %>/account/orders/<%= order.orderNumber %>" class="btn-primary">View Order Receipt &amp; Returns →</a>
+</div>
+
+<%- include('partials/footer', { storefrontUrl: storefrontUrl }) %>

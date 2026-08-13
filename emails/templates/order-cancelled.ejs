@@ -1,0 +1,30 @@
+<%- include('partials/header', { subject: subject }) %>
+
+<div style="text-align: center; margin-bottom: 24px;">
+  <span class="badge badge-warning">Order Cancelled</span>
+  <h2 style="font-family: Georgia, serif; font-size: 22px; color: #18181b; margin: 16px 0 6px 0;">Order Cancellation Notice</h2>
+  <p style="font-size: 13px; color: #52525b; margin: 0;">
+    Order Number: <strong style="color: #9b1c31;"><%= order.orderNumber %></strong>
+  </p>
+</div>
+
+<div style="background-color: #fafafa; border: 1px solid #e4e4e7; border-radius: 12px; padding: 18px; font-size: 13px; color: #3f3f46; line-height: 1.6; margin-bottom: 24px;">
+  <p style="margin: 0 0 10px 0;">
+    This email confirms that your order <strong><%= order.orderNumber %></strong> has been cancelled as requested.
+  </p>
+  <% if (order.paymentMethod === 'RAZORPAY') { %>
+  <div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 12px; color: #047857; font-size: 12px;">
+    <strong>Refund Status:</strong> A full refund of <strong>₹<%= (order.total / 100).toLocaleString('en-IN') %></strong> has been initiated via Razorpay and will credit back to your original bank/UPI account within 5–7 business days.
+  </div>
+  <% } else { %>
+  <div style="background-color: #f4f4f5; border-radius: 8px; padding: 12px; color: #52525b; font-size: 12px;">
+    <strong>Cash on Delivery (COD) Order:</strong> No payment was collected for this order.
+  </div>
+  <% } %>
+</div>
+
+<div style="text-align: center; margin-top: 24px;">
+  <a href="<%= storefrontUrl %>/products" class="btn-primary">Browse New Arrivals →</a>
+</div>
+
+<%- include('partials/footer', { storefrontUrl: storefrontUrl }) %>

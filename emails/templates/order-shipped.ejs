@@ -1,0 +1,46 @@
+<%- include('partials/header', { subject: subject }) %>
+
+<div style="text-align: center; margin-bottom: 24px;">
+  <span class="badge badge-success">Package Dispatched 🚚</span>
+  <h2 style="font-family: Georgia, serif; font-size: 24px; color: #18181b; margin: 16px 0 6px 0;">Your Order Is On Its Way!</h2>
+  <p style="font-size: 13px; color: #52525b; margin: 0;">
+    Order Number: <strong style="color: #9b1c31;"><%= order.orderNumber %></strong>
+  </p>
+</div>
+
+<!-- Logistics Card -->
+<div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 24px;">
+  <div style="font-size: 11px; font-weight: bold; color: #047857; letter-spacing: 1px; text-transform: uppercase;">Shipment Details</div>
+  <div style="font-size: 15px; font-weight: bold; color: #065f46; margin: 8px 0;">
+    Courier: <%= order.courierName || 'Delhivery Express' %>
+  </div>
+  <div style="font-family: monospace; font-size: 18px; font-weight: bold; color: #047857; background-color: #ffffff; display: inline-block; padding: 6px 16px; border-radius: 8px; border: 1px dashed #059669; margin: 6px 0;">
+    AWB: <%= order.trackingNumber || 'DELHIVERY88419' %>
+  </div>
+  <div style="font-size: 12px; color: #065f46; font-weight: 600; margin-top: 8px;">
+    Estimated Delivery: <strong><%= order.estimatedDelivery || 'In 2-4 Days' %></strong>
+  </div>
+</div>
+
+<h3 style="font-family: Georgia, serif; font-size: 15px; color: #18181b; margin: 0 0 12px 0;">Package Contents</h3>
+<table class="item-table">
+  <% order.items.forEach(function(item) { %>
+  <tr>
+    <td style="width: 50px; vertical-align: top;">
+      <% if (item.productImage) { %>
+        <img src="<%= item.productImage %>" alt="<%= item.productName %>" style="width: 48px; height: 58px; object-fit: cover; border-radius: 6px;" />
+      <% } %>
+    </td>
+    <td style="vertical-align: top; padding-left: 12px;">
+      <div style="font-weight: bold; font-size: 13px; color: #18181b;"><%= item.productName %></div>
+      <div style="font-size: 11px; color: #71717a;">Size: <%= item.variantSize %> | Qty: <%= item.quantity %></div>
+    </td>
+  </tr>
+  <% }); %>
+</table>
+
+<div style="text-align: center; margin-top: 24px;">
+  <a href="<%= storefrontUrl %>/account/orders/<%= order.orderNumber %>" class="btn-primary">Track Live Package Progress →</a>
+</div>
+
+<%- include('partials/footer', { storefrontUrl: storefrontUrl }) %>

@@ -1,26 +1,98 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #fdfbf7;
+    --foreground: #111827;
+    --theme-primary: #9b1c31; /* Default Crimson Royal */
+    --theme-primary-hover: #7d1324;
+    --theme-secondary: #f59e0b;
+    --accent: #c5a059;
+    --card: #ffffff;
+    --border: #e5e7eb;
+  }
+
+  body, html {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans-dynamic, var(--font-inter)), system-ui, -apple-system, sans-serif;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6, .font-serif, .font-playfair {
+    font-family: var(--font-serif-dynamic, var(--font-playfair)), Georgia, serif;
+  }
+
+  .font-sans, .font-inter {
+    font-family: var(--font-sans-dynamic, var(--font-inter)), system-ui, -apple-system, sans-serif;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* 🎨 Global Theme Engine Dynamic Class Mappings (End-to-End Dynamic Theme Colors) */
+.theme-bg,
+.bg-\[\#9b1c31\] {
+  background-color: var(--theme-primary) !important;
+}
+
+.theme-bg-hover:hover,
+.hover\:bg-\[\#9b1c31\]:hover,
+.hover\:bg-\[\#7d1324\]:hover {
+  background-color: var(--theme-primary-hover) !important;
+}
+
+.theme-text,
+.text-\[\#9b1c31\] {
+  color: var(--theme-primary) !important;
+}
+
+.hover\:text-\[\#9b1c31\]:hover {
+  color: var(--theme-primary) !important;
+}
+
+.theme-border,
+.border-\[\#9b1c31\] {
+  border-color: var(--theme-primary) !important;
+}
+
+.after\:bg-\[\#9b1c31\]::after {
+  background-color: var(--theme-primary) !important;
+}
+
+/* Custom Utilities */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.gold-gradient-text {
+  background: linear-gradient(135deg, #c5a059 0%, #e6c875 50%, #9e7b32 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.bg-pattern {
+  background-color: #fdfbf7;
+  background-image: radial-gradient(#c5a059 0.55px, transparent 0.55px), radial-gradient(#c5a059 0.55px, #fdfbf7 0.55px);
+  background-size: 22px 22px;
+  background-position: 0 0, 11px 11px;
+  opacity: 0.25;
+}
+
+/* Hide scrollbar for clean horizontal scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
 }

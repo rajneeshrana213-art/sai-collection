@@ -1,0 +1,43 @@
+<%- include('partials/header', { subject: subject }) %>
+
+<div style="text-align: center; margin-bottom: 24px;">
+  <span class="badge badge-primary">Payment Unsuccessful</span>
+  <h2 style="font-family: Georgia, serif; font-size: 22px; color: #18181b; margin: 16px 0 6px 0;">We Couldn't Process Your Payment</h2>
+  <p style="font-size: 13px; color: #52525b; margin: 0;">
+    Order Reference: <strong style="color: #9b1c31;"><%= order.orderNumber %></strong>
+  </p>
+</div>
+
+<div style="background-color: #fdf2f4; border: 1px solid #f8d7da; border-radius: 12px; padding: 16px; font-size: 13px; color: #991b1b; line-height: 1.5; margin-bottom: 24px;">
+  <strong>What happened?</strong> Your payment attempt via Razorpay was not completed or was declined by your bank/UPI provider. Don't worry, your selected Panipat items are saved in your order queue!
+</div>
+
+<h3 style="font-family: Georgia, serif; font-size: 15px; color: #18181b; margin: 0 0 12px 0;">Items Saved For You</h3>
+<table class="item-table">
+  <% order.items.forEach(function(item) { %>
+  <tr>
+    <td style="width: 50px; vertical-align: top;">
+      <% if (item.productImage) { %>
+        <img src="<%= item.productImage %>" alt="<%= item.productName %>" style="width: 48px; height: 58px; object-fit: cover; border-radius: 6px;" />
+      <% } %>
+    </td>
+    <td style="vertical-align: top; padding-left: 12px;">
+      <div style="font-weight: bold; font-size: 13px; color: #18181b;"><%= item.productName %></div>
+      <div style="font-size: 11px; color: #71717a;">Size: <%= item.variantSize %> | Qty: <%= item.quantity %></div>
+    </td>
+    <td style="text-align: right; vertical-align: top; font-weight: bold; font-size: 13px; color: #18181b;">
+      ₹<%= ((item.price * item.quantity) / 100).toLocaleString('en-IN') %>
+    </td>
+  </tr>
+  <% }); %>
+</table>
+
+<div style="text-align: center; margin-top: 24px;">
+  <a href="<%= storefrontUrl %>/checkout?orderRef=<%= order.orderNumber %>" class="btn-primary">Retry Payment Now →</a>
+</div>
+
+<div style="text-align: center; margin-top: 14px;">
+  <span style="font-size: 12px; color: #71717a;">Or choose <strong>Cash on Delivery (COD)</strong> at checkout.</span>
+</div>
+
+<%- include('partials/footer', { storefrontUrl: storefrontUrl }) %>

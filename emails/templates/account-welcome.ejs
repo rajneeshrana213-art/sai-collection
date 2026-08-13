@@ -1,0 +1,31 @@
+<%- include('partials/header', { subject: subject }) %>
+
+<div style="text-align: center; margin-bottom: 24px;">
+  <span class="badge badge-primary">Welcome to the Family</span>
+  <h2 style="font-family: Georgia, serif; font-size: 24px; color: #18181b; margin: 16px 0 8px 0;">Namaste, <%= userName %>!</h2>
+  <p style="font-size: 14px; color: #52525b; line-height: 1.6; margin: 0;">
+    Thank you for creating your account with <strong>Sai Collection</strong>. We are thrilled to bring authentic Panipat handcrafted Anarkalis, suit sets, Chanderi sarees &amp; Phulkari dupattas straight to your doorstep.
+  </p>
+</div>
+
+<!-- Promo Voucher Box -->
+<div style="background-color: #fffbeb; border: 1px dashed #f59e0b; border-radius: 12px; padding: 20px; text-align: center; margin: 24px 0;">
+  <span style="font-size: 11px; font-weight: bold; color: #b45309; letter-spacing: 1px; text-transform: uppercase;">Exclusive Welcome Gift</span>
+  <div style="font-family: monospace; font-size: 26px; font-weight: bold; color: #92400e; margin: 8px 0;">WELCOME10</div>
+  <p style="font-size: 12px; color: #78350f; margin: 0;">Use coupon code at checkout to get <strong>10% OFF</strong> your first order!</p>
+</div>
+
+<div style="font-size: 14px; color: #3f3f46; line-height: 1.6;">
+  <h4 style="font-family: Georgia, serif; font-size: 16px; margin: 20px 0 8px 0;">With your account you can:</h4>
+  <ul style="padding-left: 20px; margin: 0 0 20px 0;">
+    <li style="margin-bottom: 6px;">Track active package dispatches in real-time</li>
+    <li style="margin-bottom: 6px;">Save multiple delivery addresses for 1-click checkout</li>
+    <li style="margin-bottom: 6px;">Access VIP sales drops &amp; festive collection previews</li>
+  </ul>
+</div>
+
+<div style="text-align: center; margin-top: 28px;">
+  <a href="<%= storefrontUrl %>/products" class="btn-primary">Explore Panipat Catalog →</a>
+</div>
+
+<%- include('partials/footer', { storefrontUrl: storefrontUrl }) %>

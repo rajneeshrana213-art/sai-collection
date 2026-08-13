@@ -1,0 +1,43 @@
+<%- include('partials/header', { subject: subject }) %>
+
+<div style="text-align: center; margin-bottom: 24px;">
+  <span class="badge badge-primary">Items Waiting in Your Cart</span>
+  <h2 style="font-family: Georgia, serif; font-size: 24px; color: #18181b; margin: 16px 0 6px 0;">Did You Forget Something Beautiful?</h2>
+  <p style="font-size: 13px; color: #52525b; margin: 0;">
+    Your selected Panipat ethnic wear suit sets are still reserved in your bag.
+  </p>
+</div>
+
+<!-- Promo Voucher Box -->
+<div style="background-color: #fffbeb; border: 1px dashed #f59e0b; border-radius: 12px; padding: 18px; text-align: center; margin-bottom: 24px;">
+  <span style="font-size: 11px; font-weight: bold; color: #b45309; text-transform: uppercase;">Special Incentive</span>
+  <div style="font-family: monospace; font-size: 22px; font-weight: bold; color: #92400e; margin: 6px 0;">SAVE5</div>
+  <p style="font-size: 12px; color: #78350f; margin: 0;">Use code <strong>SAVE5</strong> at checkout for an instant <strong>5% Extra OFF</strong>!</p>
+</div>
+
+<!-- Cart Items Summary -->
+<h3 style="font-family: Georgia, serif; font-size: 15px; color: #18181b; margin: 0 0 12px 0;">Your Saved Cart Items</h3>
+<table class="item-table">
+  <% cartItems.forEach(function(item) { %>
+  <tr>
+    <td style="width: 50px; vertical-align: top;">
+      <% if (item.productImage) { %>
+        <img src="<%= item.productImage %>" alt="<%= item.productName %>" style="width: 48px; height: 58px; object-fit: cover; border-radius: 6px;" />
+      <% } %>
+    </td>
+    <td style="vertical-align: top; padding-left: 12px;">
+      <div style="font-weight: bold; font-size: 13px; color: #18181b;"><%= item.productName %></div>
+      <div style="font-size: 11px; color: #71717a;">Qty: <%= item.quantity %></div>
+    </td>
+    <td style="text-align: right; vertical-align: top; font-weight: bold; font-size: 13px; color: #18181b;">
+      ₹<%= ((item.price * item.quantity) / 100).toLocaleString('en-IN') %>
+    </td>
+  </tr>
+  <% }); %>
+</table>
+
+<div style="text-align: center; margin-top: 24px;">
+  <a href="<%= storefrontUrl %>/checkout" class="btn-primary">Complete Your Checkout Now →</a>
+</div>
+
+<%- include('partials/footer', { storefrontUrl: storefrontUrl }) %>

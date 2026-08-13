@@ -1,0 +1,27 @@
+<%- include('partials/header', { subject: subject }) %>
+
+<div style="text-align: center; margin-bottom: 24px;">
+  <span class="badge badge-success">Refund Processed ✓</span>
+  <h2 style="font-family: Georgia, serif; font-size: 22px; color: #18181b; margin: 16px 0 6px 0;">Refund Confirmation</h2>
+  <p style="font-size: 13px; color: #52525b; margin: 0;">
+    Order Number: <strong style="color: #9b1c31;"><%= order.orderNumber %></strong>
+  </p>
+</div>
+
+<!-- Refund Receipt Card -->
+<div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 24px;">
+  <div style="font-size: 11px; font-weight: bold; color: #047857; letter-spacing: 1px; text-transform: uppercase;">Amount Credited</div>
+  <div style="font-family: Georgia, serif; font-size: 32px; font-weight: bold; color: #065f46; margin: 8px 0;">
+    ₹<%= (refund.amount / 100).toLocaleString('en-IN') %>
+  </div>
+  <div style="font-size: 12px; color: #047857;">
+    Razorpay Refund ID: <strong style="font-family: monospace;"><%= refund.refundId || 'rfnd_9a8b7c6d' %></strong>
+  </div>
+</div>
+
+<div style="font-size: 13px; color: #3f3f46; line-height: 1.6; margin-bottom: 24px;">
+  <p>Hello <%= userName %>, your refund has been processed successfully by Razorpay and sent to your original payment method (Bank Account / UPI / Card).</p>
+  <p style="font-size: 12px; color: #71717a;">Depending on your bank, it may take 2–4 business days for the transaction to reflect on your statement.</p>
+</div>
+
+<%- include('partials/footer', { storefrontUrl: storefrontUrl }) %>
