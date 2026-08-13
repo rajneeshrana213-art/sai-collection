@@ -56,7 +56,7 @@ export default function ProductDetailPage() {
     <div className="min-h-screen flex flex-col bg-[#fdfbf7]">
       <Header />
 
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+      <main className="flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         {/* Breadcrumb Navigation */}
         <div className="flex items-center gap-2 text-xs text-zinc-500 mb-6">
           <Link href="/" className="hover:text-[#9b1c31]">Home</Link>
@@ -68,7 +68,7 @@ export default function ProductDetailPage() {
 
         {/* Top Detail Section: Image Gallery (Left) + Product Info (Right) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14">
-          
+
           {/* Left Column: Image Gallery */}
           <div className="space-y-4">
             <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-zinc-100 border border-amber-900/10 shadow-md">
@@ -77,7 +77,7 @@ export default function ProductDetailPage() {
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
-              
+
               {/* Badges */}
               <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
                 {product.badge && (
@@ -114,9 +114,8 @@ export default function ProductDetailPage() {
                   <button
                     key={img.id}
                     onClick={() => setSelectedImageIndex(idx)}
-                    className={`w-20 h-24 rounded-lg overflow-hidden border-2 transition-all ${
-                      selectedImageIndex === idx ? "border-[#9b1c31] scale-105 shadow" : "border-transparent opacity-70 hover:opacity-100"
-                    }`}
+                    className={`w-20 h-24 rounded-lg overflow-hidden border-2 transition-all ${selectedImageIndex === idx ? "border-[#9b1c31] scale-105 shadow" : "border-transparent opacity-70 hover:opacity-100"
+                      }`}
                   >
                     <img src={img.url} alt={img.altText} className="w-full h-full object-cover" />
                   </button>
@@ -177,11 +176,10 @@ export default function ProductDetailPage() {
                   <button
                     key={variant.id}
                     onClick={() => setSelectedVariant(variant)}
-                    className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${
-                      selectedVariant.id === variant.id
+                    className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${selectedVariant.id === variant.id
                         ? "bg-[#9b1c31] text-white border-[#9b1c31] shadow-md"
                         : "bg-white text-zinc-800 border-zinc-300 hover:border-amber-700"
-                    }`}
+                      }`}
                   >
                     {variant.size}
                   </button>
@@ -271,25 +269,22 @@ export default function ProductDetailPage() {
           <div className="flex border-b border-zinc-200 gap-6 text-sm font-bold mb-6 overflow-x-auto no-scrollbar">
             <button
               onClick={() => setActiveTab("DESCRIPTION")}
-              className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${
-                activeTab === "DESCRIPTION" ? "border-[#9b1c31] text-[#9b1c31]" : "border-transparent text-zinc-500"
-              }`}
+              className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === "DESCRIPTION" ? "border-[#9b1c31] text-[#9b1c31]" : "border-transparent text-zinc-500"
+                }`}
             >
               Product Description
             </button>
             <button
               onClick={() => setActiveTab("SPECS")}
-              className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${
-                activeTab === "SPECS" ? "border-[#9b1c31] text-[#9b1c31]" : "border-transparent text-zinc-500"
-              }`}
+              className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === "SPECS" ? "border-[#9b1c31] text-[#9b1c31]" : "border-transparent text-zinc-500"
+                }`}
             >
               Fabric &amp; Care Details
             </button>
             <button
               onClick={() => setActiveTab("REVIEWS")}
-              className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${
-                activeTab === "REVIEWS" ? "border-[#9b1c31] text-[#9b1c31]" : "border-transparent text-zinc-500"
-              }`}
+              className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === "REVIEWS" ? "border-[#9b1c31] text-[#9b1c31]" : "border-transparent text-zinc-500"
+                }`}
             >
               Customer Reviews ({product.reviewsCount})
             </button>

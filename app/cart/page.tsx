@@ -36,7 +36,7 @@ export default function CartPage() {
     <div className="min-h-screen flex flex-col bg-[#fdfbf7]">
       <Header />
 
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
+      <main className="flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
         <h1 className="font-serif text-3xl sm:text-4xl font-bold text-zinc-900 mb-8">
           Shopping Cart ({cart.reduce((a, b) => a + b.quantity, 0)} Items)
         </h1>
@@ -57,10 +57,10 @@ export default function CartPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
+
             {/* Left Column: Cart Items List */}
             <div className="lg:col-span-2 space-y-4">
-              
+
               {/* Free Shipping Progress Meter */}
               <div className="bg-amber-50 p-4 rounded-xl border border-amber-200">
                 {isFreeShipping ? (

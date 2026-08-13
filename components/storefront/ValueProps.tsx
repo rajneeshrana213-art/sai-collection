@@ -3,69 +3,101 @@
 import React from "react";
 
 export const ValueProps: React.FC = () => {
-  const props = [
+  const trustBadges = [
     {
+      title: "WORLDWIDE SHIPPING",
+      subtitle: "(No Cash On Delivery)",
       icon: (
-        <svg className="w-8 h-8 text-[#9b1c31]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+        <svg className="w-12 h-12 mx-auto text-zinc-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M2.5 19.5l19-15m-19 7l19 8m-9.5-2.5l-.5 4.5" />
         </svg>
       ),
-      title: "Cash On Delivery (COD)",
-      description: "Pay conveniently at your doorstep upon delivery across India."
     },
     {
+      title: "NO RETURN/ NO EXCHANGE/ NO REFUNDS",
+      subtitle: "",
       icon: (
-        <svg className="w-8 h-8 text-[#9b1c31]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
+        <svg className="w-12 h-12 mx-auto text-zinc-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 8H4m0 0v5m0-5l4 4m7-7h5m0 0v5m0-5l-4 4" />
+          <rect x="3" y="3" width="18" height="18" rx="2" />
         </svg>
       ),
-      title: "100% Quality Inspected",
-      description: "Every suit set is hand-checked for stitching, thread work & fabric feel."
     },
     {
+      title: "SECURE PAYMENT",
+      subtitle: "(We accept Debit /Credit Card and UPI Payments)",
       icon: (
-        <svg className="w-8 h-8 text-[#9b1c31]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        <svg className="w-12 h-12 mx-auto text-zinc-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <rect x="3" y="5" width="14" height="10" rx="2" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 9h14" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M18 13.5l2 2 3-3" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M20 11.5a3.5 3.5 0 103.5 3.5" />
         </svg>
       ),
-      title: "7-Day Easy Returns",
-      description: "Hassle-free size exchange and return policy for complete peace of mind."
     },
-    {
-      icon: (
-        <svg className="w-8 h-8 text-[#9b1c31]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-        </svg>
-      ),
-      title: "Secured Payments",
-      description: "Protected online payments via Razorpay (UPI, Credit/Debit, Netbanking)."
-    }
+  ];
+
+  const notices = [
+    "sai collection is not responsible for any payments made to WhatsApp numbers or DMs. Stay safe!",
+    "Important Notice: We do not take orders on WhatsApp. Please place your orders only on our website.",
   ];
 
   return (
-    <section className="py-12 bg-white border-y border-amber-900/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {props.map((prop, idx) => (
-            <div
-              key={idx}
-              className="flex items-start space-x-4 p-4 rounded-xl hover:bg-[#fdfbf7] transition-colors"
-            >
-              <div className="p-3 bg-amber-100/60 rounded-xl shrink-0">
-                {prop.icon}
-              </div>
-              <div>
-                <h4 className="font-serif text-base font-bold text-zinc-900">
-                  {prop.title}
-                </h4>
-                <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
-                  {prop.description}
-                </p>
-              </div>
+    <section className="font-sans border-t border-zinc-200 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+          {trustBadges.map((badge, idx) => (
+            <div key={idx} className="space-y-5">
+              {badge.icon}
+              <h3 className="text-[34px] leading-none sm:text-[38px] tracking-[0.1em] uppercase text-zinc-900 font-normal">
+                {badge.title}
+              </h3>
+              {badge.subtitle && (
+                <p className="text-[18px] sm:text-[20px] text-zinc-900">{badge.subtitle}</p>
+              )}
             </div>
           ))}
         </div>
       </div>
+
+      <div className="bg-rose-300 py-6 overflow-hidden border-t border-zinc-200">
+        <div className="notice-marquee-track flex w-max items-center whitespace-nowrap text-zinc-900 text-[17px] sm:text-[20px]">
+          {[...notices, ...notices].map((text, idx) => (
+            <span key={`${text}-${idx}`} className="px-10 font-medium">
+              <span className="font-semibold">📌</span> {text}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-zinc-900 text-white py-12 px-4 text-center">
+        <p className="max-w-6xl mx-auto text-[17px] sm:text-[20px] font-semibold leading-relaxed">
+          Note- After placing order all order related details are sent to your email and on whatsapp number you provided for parcel delivery. (📌 PLS CHECK SPAM FOLDER IN EMAIL ALSO)
+        </p>
+      </div>
+
+      <style jsx>{`
+        .notice-marquee-track {
+          animation: notice-marquee 24s linear infinite;
+          will-change: transform;
+        }
+
+        @keyframes notice-marquee {
+          0% {
+            transform: translateX(0%);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .notice-marquee-track {
+            animation: none;
+          }
+        }
+      `}</style>
     </section>
   );
 };
+

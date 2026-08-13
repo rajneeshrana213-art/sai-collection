@@ -22,7 +22,7 @@ export default function OrderHistoryPage() {
     <div className="min-h-screen flex flex-col bg-[#fdfbf7]">
       <Header />
 
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+      <main className="flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         <h1 className="font-serif text-3xl font-bold text-zinc-900 mb-6">Order History</h1>
 
         {/* Nav tabs */}
@@ -42,9 +42,8 @@ export default function OrderHistoryPage() {
                   <p className="text-xs text-zinc-500">Ordered on {order.date}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className={`text-xs font-bold px-3 py-1 rounded-full ${
-                    order.status === "DELIVERED" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-900"
-                  }`}>
+                  <span className={`text-xs font-bold px-3 py-1 rounded-full ${order.status === "DELIVERED" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-900"
+                    }`}>
                     {order.status}
                   </span>
                   <span className="font-serif font-bold text-base text-zinc-900">{formatCurrency(order.total)}</span>

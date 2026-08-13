@@ -64,8 +64,8 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-[#fdfbf7] py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
+
         {/* Top Header */}
         <div className="flex items-center justify-between pb-6 border-b border-amber-900/10 mb-8">
           <Link href="/" className="font-serif text-2xl font-bold text-zinc-900">
@@ -77,10 +77,10 @@ export default function CheckoutPage() {
         </div>
 
         <form onSubmit={handlePlaceOrder} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* Left Column: Shipping Address & Payment Selection */}
           <div className="lg:col-span-2 space-y-6">
-            
+
             {/* 1. Customer Details & Address */}
             <div className="bg-white p-6 sm:p-8 rounded-2xl border border-amber-900/10 shadow-sm space-y-4">
               <h2 className="font-serif text-xl font-bold text-zinc-900 flex items-center gap-2">
@@ -198,9 +198,8 @@ export default function CheckoutPage() {
 
               <div className="space-y-3 text-xs">
                 {/* Razorpay Online */}
-                <label className={`p-4 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
-                  paymentMethod === "RAZORPAY" ? "border-[#9b1c31] bg-amber-50/40 ring-1 ring-[#9b1c31]" : "border-zinc-200"
-                }`}>
+                <label className={`p-4 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${paymentMethod === "RAZORPAY" ? "border-[#9b1c31] bg-amber-50/40 ring-1 ring-[#9b1c31]" : "border-zinc-200"
+                  }`}>
                   <div className="flex items-center gap-3">
                     <input
                       type="radio"
@@ -218,9 +217,8 @@ export default function CheckoutPage() {
                 </label>
 
                 {/* Cash on Delivery */}
-                <label className={`p-4 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
-                  paymentMethod === "COD" ? "border-[#9b1c31] bg-amber-50/40 ring-1 ring-[#9b1c31]" : "border-zinc-200"
-                }`}>
+                <label className={`p-4 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${paymentMethod === "COD" ? "border-[#9b1c31] bg-amber-50/40 ring-1 ring-[#9b1c31]" : "border-zinc-200"
+                  }`}>
                   <div className="flex items-center gap-3">
                     <input
                       type="radio"

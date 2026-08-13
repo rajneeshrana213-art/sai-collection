@@ -6,8 +6,8 @@ import { TESTIMONIALS } from "@/lib/mock-data";
 export const Testimonials: React.FC = () => {
   return (
     <section className="py-16 bg-[#f7f3eb]/60 border-y border-amber-900/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
+
         {/* Section Title */}
         <div className="text-center max-w-xl mx-auto mb-12">
           <span className="text-amber-800 text-xs font-bold uppercase tracking-widest">Real Customer Feedback</span>

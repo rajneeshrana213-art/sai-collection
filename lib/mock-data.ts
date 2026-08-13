@@ -324,7 +324,7 @@ export const CATEGORIES: Category[] = [
   }
 ];
 
-export const MOCK_PRODUCTS: Product[] = [
+const INITIAL_MOCK_PRODUCTS: Product[] = [
   {
     id: "prod-1",
     name: "Panipat Velvet Anarkali Suit Set",
@@ -411,10 +411,62 @@ export const MOCK_PRODUCTS: Product[] = [
     ],
     variants: [
       { id: "v3-s", size: "S", color: "Lilac Floral", sku: "SAI-DRS-LLC-S", price: 169900, stock: 10 },
-      { id: "v3-m", size: "M", color: "Lilac Floral", sku: "SAI-DRS-LLC-M", price: 169900, stock: 15 }
     ]
   }
 ];
+
+const generateMockProducts = (existingProducts: Product[]): Product[] => {
+  const products = [...existingProducts];
+  
+  const productImages = [
+    "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1509551388413-e18d0ac5d495?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&q=80&w=800"
+  ];
+
+  CATEGORIES.forEach(cat => {
+    const existing = products.filter(p => p.categorySlug === cat.slug).length;
+    for (let i = existing; i < 5; i++) {
+      const basePrice = 120000 + (Math.floor(Math.random() * 20) * 10000); // 1200 to 3200 INR
+      const randomImage = productImages[Math.floor(Math.random() * productImages.length)];
+      
+      products.push({
+        id: `prod-${cat.slug}-${i}`,
+        name: `Premium ${cat.name} Collection ${i+1}`,
+        slug: `${cat.slug}-collection-${i+1}`,
+        description: `Experience the luxury and comfort of our ${cat.name}. Carefully crafted for the best quality and elegant look, perfect for any occasion.`,
+        category: cat.name,
+        categorySlug: cat.slug,
+        basePrice: basePrice,
+        originalPrice: basePrice + 50000, 
+        rating: Number((4.0 + (Math.random() * 1)).toFixed(1)),
+        reviewsCount: Math.floor(Math.random() * 100) + 10,
+        fabric: "Premium Blend",
+        isAvailableForCOD: true,
+        images: [
+           { id: `img-${cat.slug}-${i}-1`, url: randomImage, altText: `${cat.name} 1` },
+        ],
+        variants: [
+          { id: `v-${cat.slug}-${i}-s`, size: "S", color: "Assorted", sku: `SKU-${cat.slug}-${i}-S`, price: basePrice, stock: Math.floor(Math.random() * 20) + 5 },
+          { id: `v-${cat.slug}-${i}-m`, size: "M", color: "Assorted", sku: `SKU-${cat.slug}-${i}-M`, price: basePrice, stock: Math.floor(Math.random() * 20) + 5 },
+          { id: `v-${cat.slug}-${i}-l`, size: "L", color: "Assorted", sku: `SKU-${cat.slug}-${i}-L`, price: basePrice, stock: Math.floor(Math.random() * 20) + 5 },
+        ]
+      });
+    }
+  });
+
+  return products;
+}
+
+export const MOCK_PRODUCTS: Product[] = generateMockProducts(INITIAL_MOCK_PRODUCTS);
 
 export const MOCK_ORDERS: Order[] = [
   {

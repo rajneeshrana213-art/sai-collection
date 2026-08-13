@@ -1,84 +1,139 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
+import React, { useState, useEffect } from "react";
+
+const HERO_SLIDES = [
+  {
+    id: 1,
+    title: "NEW ARRIVALS",
+    subtitle: "BUY DESIGNER ETHNIC WEAR & INDO-WESTERN AT SAI COLLECTION",
+    image: "/cover-page.png",
+    link: "/products",
+    badge: "Festive Collection '26",
+  },
+];
 
 export const HeroBanner: React.FC = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const SAFETY_NOTICES = [
+    "📌 Pls Note: We don't take orders on any WhatsApp numbers.",
+    "📌 हम किसी भी WhatsApp नंबर पर order नहीं लेते।",
+    "Sai Collection is not responsible for any payments made to WhatsApp numbers or DMs. Stay safe! ✅",
+  ];
+
+  const MARQUEE_NOTICES = [...SAFETY_NOTICES, ...SAFETY_NOTICES];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
-    <section className="relative overflow-hidden bg-[#171010] text-white">
-      {/* Background Image Overlay */}
-      <div 
-        className="absolute inset-0 z-0 bg-cover bg-center opacity-65 transform scale-105 transition-transform duration-10000 ease-out"
-        style={{
-          backgroundImage: `url('/cover-page.jpeg')`,
-        }}
-      />
+    <section className="w-full flex flex-col font-sans">
 
-      {/* Gradient Vignette & Mesh */}
-      <div className="absolute inset-0 z-0 bg-gradient-to-r from-black/85 via-black/60 to-transparent" />
-      <div className="absolute inset-0 z-0 bg-gradient-to-t from-[#171010] via-transparent to-black/40" />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32 flex flex-col justify-center min-h-[580px]">
-        <div className="max-w-2xl space-y-6">
-
-          {/* Subtitle Badge */}
-          <div className="inline-flex items-center gap-2 bg-amber-500/20 backdrop-blur-md border border-amber-400/30 text-amber-200 text-xs sm:text-sm px-4 py-1.5 rounded-full font-medium">
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-            <span>Panipat Artisan Craftsmanship • Direct-to-Consumer</span>
-          </div>
-
-          {/* Main Title */}
-          <h1 className="font-serif text-4xl sm:text-6xl lg:text-7xl font-bold leading-none tracking-tight">
-            Festive Elegance <br />
-            <span className="italic font-normal text-amber-200">Redefined.</span>
-          </h1>
-
-          {/* Paragraph */}
-          <p className="text-zinc-300 text-base sm:text-lg max-w-xl font-light leading-relaxed">
-            Discover royal Velvet Anarkali suit sets, Chanderi silk kurtas, and handcrafted Phulkari dupattas. Shipped directly from our master workshops in Panipat, Haryana.
-          </p>
-
-          {/* CTA Buttons */}
-          <div className="pt-4 flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
-            <Link
-              href="/products"
-              className="bg-[#9b1c31] hover:bg-[#b5223c] text-white font-medium px-8 py-4 rounded-full text-center shadow-lg hover:shadow-red-900/30 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 group"
+      {/* 1. Side Animation Slide Carousel Banner */}
+      <div className="relative overflow-hidden bg-zinc-950 min-h-[420px] sm:min-h-[550px] flex items-center">
+        {HERO_SLIDES.map((slide, idx) => {
+          const isActive = idx === currentSlide;
+          return (
+            <div
+              key={slide.id}
+              className={`absolute inset-0 transition-transform duration-700 ease-in-out flex items-center justify-center ${isActive
+                  ? "translate-x-0 opacity-100 z-10"
+                  : idx < currentSlide
+                    ? "-translate-x-full opacity-0 z-0"
+                    : "translate-x-full opacity-0 z-0"
+                }`}
             >
-              <span>Explore Collection</span>
-              <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </Link>
+              {/* Background Image Overlay */}
+              <div
+                className="absolute inset-0 bg-cover bg-center opacity-70 scale-105 transition-transform duration-10000"
+                style={{ backgroundImage: `url('${slide.image}')` }}
+              />
+              <div className="absolute inset-0 " />
 
-            <Link
-              href="/products?category=womens-ethnic-suits"
-              className="border border-white/30 hover:border-amber-300 bg-white/5 hover:bg-white/10 text-white font-medium px-8 py-4 rounded-full text-center backdrop-blur-sm transition-all"
-            >
-              Shop Anarkalis
-            </Link>
+              {/* Text & Button Content Overlay */}
+              {/* <div className="relative z-20 max-w-5xl mx-auto px-4 text-center text-white space-y-4 sm:space-y-6">
+                <span className="inline-block bg-white/20 backdrop-blur-md border border-white/30 text-white text-xs font-bold px-4 py-1.5 uppercase tracking-widest">
+                  {slide.badge}
+                </span>
+
+                <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-bold uppercase tracking-widest leading-tight">
+                  {slide.title}
+                </h1>
+
+                <p className="text-xs sm:text-sm text-zinc-200 uppercase tracking-widest font-medium max-w-xl mx-auto">
+                  {slide.subtitle}
+                </p>
+
+                <div className="pt-2">
+                  <Link
+                    href={slide.link}
+                    className="inline-block bg-white hover:bg-zinc-100 text-zinc-950 font-bold px-8 py-3.5 text-xs uppercase tracking-widest shadow-xl transition-all hover:scale-105 active:scale-95"
+                  >
+                    SHOP NOW →
+                  </Link>
+                </div>
+              </div> */}
+            </div>
+          );
+        })}
+
+        {/* Carousel Indicators / Controls */}
+        <div className="absolute bottom-5 inset-x-0 z-30 flex justify-center items-center gap-2">
+          {HERO_SLIDES.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentSlide(i)}
+              className={`h-2 rounded-full transition-all ${i === currentSlide ? "w-8 bg-white" : "w-2 bg-white/40 hover:bg-white/70"
+                }`}
+              title={`Slide ${i + 1}`}
+            />
+          ))}
+        </div>
+      </div>
+      {/* 2. Sai Collection WhatsApp Safety Notice Auto Slider */}
+      <div className="bg-zinc-900 border-y border-zinc-700 px-3 sm:px-4 py-2.5 text-white">
+        <div className="relative overflow-hidden h-7 sm:h-8 flex items-center">
+          <div className="notice-marquee-track flex w-max items-center whitespace-nowrap">
+            {MARQUEE_NOTICES.map((notice, idx) => (
+              <span
+                key={`${notice}-${idx}`}
+                className="inline-flex items-center text-xs sm:text-sm font-semibold px-6"
+              >
+                {notice}
+              </span>
+            ))}
           </div>
-
-          {/* Trust Highlights */}
-          <div className="pt-8 border-t border-white/10 grid grid-cols-3 gap-4 text-xs sm:text-sm text-zinc-300">
-            <div className="flex items-center gap-2">
-              <span className="text-amber-400 text-lg">🚚</span>
-              <span><strong>Free Shipping</strong> on ₹999+</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-amber-400 text-lg">💵</span>
-              <span><strong>COD Available</strong> All-India</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-amber-400 text-lg">✨</span>
-              <span><strong>100% Inspected</strong> Quality</span>
-            </div>
-          </div>
-
         </div>
       </div>
 
-      {/* Decorative Bottom Wave Divider */}
-      <div className="absolute bottom-0 inset-x-0 h-6 bg-[#fdfbf7] [clip-path:polygon(0_100%,100%_100%,100%_0)]" />
+      <style jsx>{`
+        .notice-marquee-track {
+          animation: notice-marquee 22s linear infinite;
+          will-change: transform;
+        }
+
+        @keyframes notice-marquee {
+          0% {
+            transform: translateX(0%);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .notice-marquee-track {
+            animation: none;
+          }
+        }
+      `}</style>
     </section>
   );
 };
+

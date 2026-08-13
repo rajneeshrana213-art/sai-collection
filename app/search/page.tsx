@@ -25,16 +25,16 @@ function SearchContent() {
   const results = query.trim() === ""
     ? MOCK_PRODUCTS
     : MOCK_PRODUCTS.filter(
-        (p) =>
-          p.name.toLowerCase().includes(query.toLowerCase()) ||
-          p.category.toLowerCase().includes(query.toLowerCase()) ||
-          p.description.toLowerCase().includes(query.toLowerCase())
-      );
+      (p) =>
+        p.name.toLowerCase().includes(query.toLowerCase()) ||
+        p.category.toLowerCase().includes(query.toLowerCase()) ||
+        p.description.toLowerCase().includes(query.toLowerCase())
+    );
 
   const paginatedResults = results.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
-    <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+    <main className="flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
       {/* Header Search Box */}
       <div className="bg-white p-6 rounded-2xl border border-amber-900/10 shadow-sm mb-8 space-y-4">
         <h1 className="font-serif text-2xl sm:text-3xl font-bold text-zinc-900">
@@ -52,7 +52,7 @@ function SearchContent() {
             className="flex-1 border border-zinc-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#9b1c31]"
           />
           <button
-            onClick={() => {}}
+            onClick={() => { }}
             className="bg-[#9b1c31] text-white font-bold px-6 py-3 rounded-xl text-xs"
           >
             Search

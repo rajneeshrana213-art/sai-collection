@@ -17,7 +17,7 @@ export default function WishlistPage() {
     <div className="min-h-screen flex flex-col bg-[#fdfbf7]">
       <Header />
 
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+      <main className="flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         <h1 className="font-serif text-3xl font-bold text-zinc-900 mb-6">Saved Wishlist ({wishlistedProducts.length})</h1>
 
         {/* Nav tabs */}

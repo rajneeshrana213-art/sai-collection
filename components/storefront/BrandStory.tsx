@@ -2,23 +2,24 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 export const BrandStory: React.FC = () => {
   return (
     <section className="py-20 bg-[#fdfbf7] relative overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          
+
           {/* Visual Showcase Stack */}
           <div className="relative">
             <div className="relative z-10 rounded-2xl overflow-hidden shadow-2xl border-4 border-white aspect-[4/5] max-w-md mx-auto lg:max-w-none">
-              <img
+              <Image
                 src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&q=80&w=1000"
                 alt="Sai Collection Panipat Artisan Craftsmanship"
                 className="w-full h-full object-cover"
               />
             </div>
-            
+
             {/* Overlay Accent Card */}
             <div className="absolute -bottom-6 -right-2 sm:right-6 z-20 bg-[#9b1c31] text-white p-6 rounded-2xl shadow-xl max-w-xs border border-amber-400/30">
               <div className="text-3xl font-serif font-bold text-amber-200">Panipat, HR</div>

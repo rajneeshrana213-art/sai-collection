@@ -68,7 +68,7 @@ function ProductsContent() {
   };
 
   return (
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+    <main className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
       {/* Breadcrumb & Header Title */}
       <div className="mb-8">
         <div className="flex items-center gap-2 text-xs text-zinc-500 mb-2">
@@ -116,10 +116,10 @@ function ProductsContent() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-        
+
         {/* Left Sidebar Filters (Desktop + Responsive Drawer) */}
         <aside className={`lg:block ${isMobileFilterOpen ? "block" : "hidden"} space-y-6 bg-white p-6 rounded-2xl border border-amber-900/10 h-fit sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto no-scrollbar`}>
-          
+
           {/* Category Filter */}
           <div>
             <h3 className="font-serif text-sm font-bold text-zinc-900 uppercase tracking-wider mb-3">
@@ -128,11 +128,10 @@ function ProductsContent() {
             <div className="space-y-1.5 text-xs">
               <button
                 onClick={() => setSelectedCategory("ALL")}
-                className={`w-full text-left px-3 py-2 rounded-lg font-medium transition-colors ${
-                  selectedCategory === "ALL"
+                className={`w-full text-left px-3 py-2 rounded-lg font-medium transition-colors ${selectedCategory === "ALL"
                     ? "bg-[#9b1c31] text-white font-bold"
                     : "text-zinc-700 hover:bg-amber-50"
-                }`}
+                  }`}
               >
                 All Collections
               </button>
@@ -140,16 +139,14 @@ function ProductsContent() {
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.slug)}
-                  className={`w-full text-left px-3 py-2 rounded-lg font-medium transition-colors flex justify-between items-center ${
-                    selectedCategory === cat.slug
+                  className={`w-full text-left px-3 py-2 rounded-lg font-medium transition-colors flex justify-between items-center ${selectedCategory === cat.slug
                       ? "bg-[#9b1c31] text-white font-bold"
                       : "text-zinc-700 hover:bg-amber-50"
-                  }`}
+                    }`}
                 >
                   <span>{cat.name}</span>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded ${
-                    selectedCategory === cat.slug ? "bg-white/20 text-white" : "bg-zinc-100 text-zinc-500"
-                  }`}>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded ${selectedCategory === cat.slug ? "bg-white/20 text-white" : "bg-zinc-100 text-zinc-500"
+                    }`}>
                     {cat.itemCount}
                   </span>
                 </button>
@@ -167,11 +164,10 @@ function ProductsContent() {
                 <button
                   key={sz}
                   onClick={() => setSelectedSize(sz)}
-                  className={`px-3 py-1 rounded border font-semibold transition-all ${
-                    selectedSize === sz
+                  className={`px-3 py-1 rounded border font-semibold transition-all ${selectedSize === sz
                       ? "bg-[#9b1c31] text-white border-[#9b1c31]"
                       : "bg-zinc-50 text-zinc-700 border-zinc-200 hover:border-amber-600"
-                  }`}
+                    }`}
                 >
                   {sz === "ALL" ? "All Sizes" : sz}
                 </button>
@@ -244,127 +240,125 @@ function ProductsContent() {
               {filtered
                 .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
                 .map((product) => {
-                const hasDiscount = product.originalPrice && product.originalPrice > product.basePrice;
-                const discountPercent = hasDiscount
-                  ? Math.round(((product.originalPrice! - product.basePrice) / product.originalPrice!) * 100)
-                  : 0;
+                  const hasDiscount = product.originalPrice && product.originalPrice > product.basePrice;
+                  const discountPercent = hasDiscount
+                    ? Math.round(((product.originalPrice! - product.basePrice) / product.originalPrice!) * 100)
+                    : 0;
 
-                const wishlisted = isWishlisted(product.id);
-                const currentSize = selectedSizes[product.id] || product.variants[0]?.size || "M";
+                  const wishlisted = isWishlisted(product.id);
+                  const currentSize = selectedSizes[product.id] || product.variants[0]?.size || "M";
 
-                return (
-                  <div
-                    key={product.id}
-                    className="group bg-white rounded-2xl overflow-hidden border border-amber-900/10 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
-                  >
-                    {/* Image Box */}
-                    <div className="relative aspect-[3/4] overflow-hidden bg-zinc-100">
-                      <Link href={`/products/${product.slug}`}>
-                        <img
-                          src={product.images[0]?.url}
-                          alt={product.name}
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                        />
-                        {product.images[1] && (
-                          <img
-                            src={product.images[1]?.url}
-                            alt={`${product.name} preview`}
-                            className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                          />
-                        )}
-                      </Link>
-
-                      {/* Badges */}
-                      <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
-                        {product.badge && (
-                          <span className={`text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full text-white shadow-md ${
-                            product.badge === "BEST SELLER" ? "bg-[#9b1c31]" : "bg-amber-600"
-                          }`}>
-                            {product.badge}
-                          </span>
-                        )}
-                        {hasDiscount && (
-                          <span className="bg-emerald-700 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">
-                            {discountPercent}% OFF
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Wishlist Button */}
-                      <button
-                        onClick={() => toggleWishlist(product.id)}
-                        className="absolute top-3 right-3 z-10 p-2 rounded-full bg-white/80 backdrop-blur-md text-zinc-700 hover:text-red-500 shadow-md transition-all active:scale-90"
-                      >
-                        <svg
-                          className={`w-5 h-5 ${wishlisted ? "fill-red-500 text-red-500" : "fill-none text-zinc-700"}`}
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                        </svg>
-                      </button>
-                    </div>
-
-                    {/* Product Details */}
-                    <div className="p-4 flex-1 flex flex-col justify-between">
-                      <div>
-                        <div className="flex justify-between items-start gap-2 mb-1">
-                          <span className="text-[11px] font-semibold text-amber-800 uppercase tracking-wider">{product.category}</span>
-                          <span className="flex items-center gap-1 text-xs font-bold text-amber-500">
-                            ★ {product.rating} <span className="text-zinc-400 font-normal">({product.reviewsCount})</span>
-                          </span>
-                        </div>
-
+                  return (
+                    <div
+                      key={product.id}
+                      className="group bg-white rounded-2xl overflow-hidden border border-amber-900/10 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+                    >
+                      {/* Image Box */}
+                      <div className="relative aspect-[3/4] overflow-hidden bg-zinc-100">
                         <Link href={`/products/${product.slug}`}>
-                          <h3 className="font-serif font-bold text-sm text-zinc-900 line-clamp-1 group-hover:text-[#9b1c31] transition-colors">
-                            {product.name}
-                          </h3>
+                          <img
+                            src={product.images[0]?.url}
+                            alt={product.name}
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                          />
+                          {product.images[1] && (
+                            <img
+                              src={product.images[1]?.url}
+                              alt={`${product.name} preview`}
+                              className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                            />
+                          )}
                         </Link>
-                      </div>
 
-                      {/* Quick Size Selector */}
-                      <div className="mt-3">
-                        <span className="text-[10px] font-bold text-zinc-400 block mb-1">SELECT SIZE:</span>
-                        <div className="flex gap-1 overflow-x-auto">
-                          {product.variants.map((v) => (
-                            <button
-                              key={v.id}
-                              onClick={() => setSelectedSizes((prev) => ({ ...prev, [product.id]: v.size }))}
-                              className={`text-[10px] font-bold w-7 h-7 rounded-md border flex items-center justify-center transition-all ${
-                                currentSize === v.size
-                                  ? "bg-zinc-900 text-white border-zinc-900"
-                                  : "border-zinc-200 text-zinc-600 hover:border-zinc-400"
-                              }`}
-                            >
-                              {v.size}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between">
-                        <div>
-                          <span className="text-base font-bold text-zinc-900">{formatCurrency(product.basePrice)}</span>
+                        {/* Badges */}
+                        <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
+                          {product.badge && (
+                            <span className={`text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full text-white shadow-md ${product.badge === "BEST SELLER" ? "bg-[#9b1c31]" : "bg-amber-600"
+                              }`}>
+                              {product.badge}
+                            </span>
+                          )}
                           {hasDiscount && (
-                            <span className="text-xs text-zinc-400 line-through block font-normal">
-                              {formatCurrency(product.originalPrice!)}
+                            <span className="bg-emerald-700 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">
+                              {discountPercent}% OFF
                             </span>
                           )}
                         </div>
 
+                        {/* Wishlist Button */}
                         <button
-                          onClick={() => handleAddToCart(product)}
-                          className="bg-[#9b1c31] hover:bg-[#7d1324] text-white text-xs font-bold px-3.5 py-2 rounded-full shadow-sm transition-all active:scale-95"
+                          onClick={() => toggleWishlist(product.id)}
+                          className="absolute top-3 right-3 z-10 p-2 rounded-full bg-white/80 backdrop-blur-md text-zinc-700 hover:text-red-500 shadow-md transition-all active:scale-90"
                         >
-                          Add to Cart
+                          <svg
+                            className={`w-5 h-5 ${wishlisted ? "fill-red-500 text-red-500" : "fill-none text-zinc-700"}`}
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                          </svg>
                         </button>
                       </div>
 
-                    </div>
+                      {/* Product Details */}
+                      <div className="p-4 flex-1 flex flex-col justify-between">
+                        <div>
+                          <div className="flex justify-between items-start gap-2 mb-1">
+                            <span className="text-[11px] font-semibold text-amber-800 uppercase tracking-wider">{product.category}</span>
+                            <span className="flex items-center gap-1 text-xs font-bold text-amber-500">
+                              ★ {product.rating} <span className="text-zinc-400 font-normal">({product.reviewsCount})</span>
+                            </span>
+                          </div>
 
-                  </div>
-                );
-              })}
+                          <Link href={`/products/${product.slug}`}>
+                            <h3 className="font-serif font-bold text-sm text-zinc-900 line-clamp-1 group-hover:text-[#9b1c31] transition-colors">
+                              {product.name}
+                            </h3>
+                          </Link>
+                        </div>
+
+                        {/* Quick Size Selector */}
+                        <div className="mt-3">
+                          <span className="text-[10px] font-bold text-zinc-400 block mb-1">SELECT SIZE:</span>
+                          <div className="flex gap-1 overflow-x-auto">
+                            {product.variants.map((v) => (
+                              <button
+                                key={v.id}
+                                onClick={() => setSelectedSizes((prev) => ({ ...prev, [product.id]: v.size }))}
+                                className={`text-[10px] font-bold w-7 h-7 rounded-md border flex items-center justify-center transition-all ${currentSize === v.size
+                                    ? "bg-zinc-900 text-white border-zinc-900"
+                                    : "border-zinc-200 text-zinc-600 hover:border-zinc-400"
+                                  }`}
+                              >
+                                {v.size}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between">
+                          <div>
+                            <span className="text-base font-bold text-zinc-900">{formatCurrency(product.basePrice)}</span>
+                            {hasDiscount && (
+                              <span className="text-xs text-zinc-400 line-through block font-normal">
+                                {formatCurrency(product.originalPrice!)}
+                              </span>
+                            )}
+                          </div>
+
+                          <button
+                            onClick={() => handleAddToCart(product)}
+                            className="bg-[#9b1c31] hover:bg-[#7d1324] text-white text-xs font-bold px-3.5 py-2 rounded-full shadow-sm transition-all active:scale-95"
+                          >
+                            Add to Cart
+                          </button>
+                        </div>
+
+                      </div>
+
+                    </div>
+                  );
+                })}
             </div>
           )}
 

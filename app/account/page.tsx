@@ -13,7 +13,7 @@ export default function AccountOverviewPage() {
     <div className="min-h-screen flex flex-col bg-[#fdfbf7]">
       <Header />
 
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+      <main className="flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         <div className="mb-8">
           <h1 className="font-serif text-3xl font-bold text-zinc-900">My Account Dashboard</h1>
           <p className="text-xs text-zinc-500 mt-1">Welcome back, <strong>Pooja Sharma</strong> (pooja.sharma@example.com)</p>
@@ -28,7 +28,7 @@ export default function AccountOverviewPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* Recent Order Summary Card */}
           <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-amber-900/10 shadow-sm space-y-4">
             <div className="flex justify-between items-center pb-3 border-b border-zinc-100">
