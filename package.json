@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run --config tests/vitest.config.mts",
@@ -46,5 +47,5 @@
     "typescript": "^5",
     "vitest": "^4.1.10"
   },
-  "packageManager": "pnpm@11.5.2"
+  "packageManager": "pnpm@10.4.0"
 }
