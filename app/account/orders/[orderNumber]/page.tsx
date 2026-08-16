@@ -1,24 +1,78 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
-import { MOCK_ORDERS } from "@/lib/mock-data";
+import { Order } from "@/lib/mock-data";
+import { apiClient } from "@/lib/api-client";
+import Image from "next/image";
 
 export default function OrderTrackingDetailPage() {
   const params = useParams();
-  const orderNumber = (params.orderNumber as string) || "SAI-ORD-2026-8841";
+  const orderNumber = params.orderNumber as string;
 
-  const order = MOCK_ORDERS.find((o) => o.orderNumber === orderNumber) || MOCK_ORDERS[0];
+  const [order, setOrder] = useState<Order | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchOrderDetails() {
+      try {
+        const res = await apiClient.get<{ order: Order } | Order>(`/api/v1/orders/${orderNumber}`);
+        if (res && "order" in res && res.order) {
+          setOrder(res.order);
+        } else if (res && typeof res === "object" && "orderNumber" in res) {
+          setOrder(res as Order);
+        } else {
+          setOrder(null);
+        }
+      } catch (err) {
+        console.warn("Order details API fetch error", err);
+        setOrder(null);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchOrderDetails();
+  }, [orderNumber]);
+
   const formatCurrency = (paise: number) => `₹${(paise / 100).toLocaleString("en-IN")}`;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#fdfbf7]">
+        <Header />
+        <main className="flex-1 max-w-4xl mx-auto px-4 py-16 text-center text-xs text-zinc-400 font-medium">
+          Loading order details...
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!order) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#fdfbf7]">
+        <Header />
+        <main className="flex-1 max-w-md mx-auto px-4 py-16 text-center space-y-4">
+          <div className="text-4xl">📦</div>
+          <h2 className="font-serif text-2xl font-bold text-zinc-900">Order Not Found</h2>
+          <p className="text-xs text-zinc-500">We could not locate this order in your account history.</p>
+          <Link href="/account/orders" className="inline-block bg-[#9b1c31] text-white text-xs font-bold px-6 py-2.5 rounded-full">
+            Back to Orders →
+          </Link>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   const steps = [
     { label: "Order Placed", done: true, date: order.date },
-    { label: "Packed in Panipat", done: true, date: "Aug 11, 2026" },
-    { label: "Shipped via Courier", done: order.status === "SHIPPED" || order.status === "DELIVERED", date: "Aug 12, 2026" },
-    { label: "Out for Delivery", done: order.status === "DELIVERED", date: order.estimatedDelivery || "Aug 14, 2026" },
+    { label: "Packed in Panipat", done: true, date: order.date },
+    { label: "Shipped via Courier", done: order.status === "SHIPPED" || order.status === "DELIVERED", date: order.date },
+    { label: "Out for Delivery", done: order.status === "DELIVERED", date: order.estimatedDelivery || "Standard Delivery" },
   ];
 
   return (
@@ -72,7 +126,7 @@ export default function OrderTrackingDetailPage() {
             <div className="space-y-3">
               {order.items.map((item) => (
                 <div key={item.id} className="flex gap-4 items-center text-xs">
-                  <img src={item.productImage} alt={item.productName} className="w-16 h-20 object-cover rounded-lg bg-zinc-100 shrink-0" />
+                  <Image src={item.productImage} alt={item.productName} width={64} height={80} className="w-16 h-20 object-cover rounded-lg bg-zinc-100 shrink-0" />
                   <div className="flex-1">
                     <h4 className="font-serif font-bold text-zinc-900 text-sm">{item.productName}</h4>
                     <p className="text-zinc-500">Size: {item.variantSize} | Color: {item.variantColor} | Qty: {item.quantity}</p>

@@ -7,8 +7,9 @@ import { Footer } from "@/components/storefront/Footer";
 import { CartDrawer } from "@/components/storefront/CartDrawer";
 import { QuickSearchModal } from "@/components/storefront/QuickSearchModal";
 import { Pagination } from "@/components/common/Pagination";
-import { MOCK_PRODUCTS, CATEGORIES, Product } from "@/lib/mock-data";
+import { Product, Category } from "@/lib/mock-data";
 import { useCart } from "@/context/CartContext";
+import { apiClient } from "@/lib/api-client";
 import Link from "next/link";
 
 interface FilterContentProps {
@@ -18,6 +19,7 @@ interface FilterContentProps {
   setSelectedSize: (size: string) => void;
   priceRange: string;
   setPriceRange: (range: string) => void;
+  categoriesList: Category[];
 }
 
 function FilterContent({
@@ -27,6 +29,7 @@ function FilterContent({
   setSelectedSize,
   priceRange,
   setPriceRange,
+  categoriesList,
 }: FilterContentProps) {
   return (
     <>
@@ -39,19 +42,19 @@ function FilterContent({
           <button
             onClick={() => setSelectedCategory("ALL")}
             className={`w-full text-left px-3 py-2 rounded-lg font-medium transition-colors ${selectedCategory === "ALL"
-                ? "bg-[#9b1c31] text-white font-bold"
-                : "text-zinc-700 hover:bg-amber-50"
+              ? "bg-[#9b1c31] text-white font-bold"
+              : "text-zinc-700 hover:bg-amber-50"
               }`}
           >
             All Collections
           </button>
-          {CATEGORIES.map((cat) => (
+          {categoriesList.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.slug)}
               className={`w-full text-left px-3 py-2 rounded-lg font-medium transition-colors flex justify-between items-center ${selectedCategory === cat.slug
-                  ? "bg-[#9b1c31] text-white font-bold"
-                  : "text-zinc-700 hover:bg-amber-50"
+                ? "bg-[#9b1c31] text-white font-bold"
+                : "text-zinc-700 hover:bg-amber-50"
                 }`}
             >
               <span>{cat.name}</span>
@@ -75,8 +78,8 @@ function FilterContent({
               key={sz}
               onClick={() => setSelectedSize(sz)}
               className={`px-3 py-1 rounded border font-semibold transition-all ${selectedSize === sz
-                  ? "bg-[#9b1c31] text-white border-[#9b1c31]"
-                  : "bg-zinc-50 text-zinc-700 border-zinc-200 hover:border-amber-600"
+                ? "bg-[#9b1c31] text-white border-[#9b1c31]"
+                : "bg-zinc-50 text-zinc-700 border-zinc-200 hover:border-amber-600"
                 }`}
             >
               {sz === "ALL" ? "All Sizes" : sz}
@@ -160,8 +163,43 @@ function ProductsContent() {
     };
   }, [isMobileFilterOpen]);
 
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [categoriesList, setCategoriesList] = useState<Category[]>([]);
+
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const res = await apiClient.get<{ products: Product[] }>("/api/v1/products");
+        if (res && Array.isArray(res.products)) {
+          setAllProducts(res.products);
+        } else if (Array.isArray(res)) {
+          setAllProducts(res as unknown as Product[]);
+        } else {
+          setAllProducts([]);
+        }
+      } catch (err) {
+        console.warn("Products catalog API fetch error", err);
+        setAllProducts([]);
+      }
+    }
+    async function fetchCategoriesList() {
+      try {
+        const res = await apiClient.get<{ categories: Category[] }>("/api/v1/categories");
+        if (res && Array.isArray(res.categories)) {
+          setCategoriesList(res.categories);
+        } else if (Array.isArray(res)) {
+          setCategoriesList(res as unknown as Category[]);
+        }
+      } catch (err) {
+        console.warn("Categories API fetch error", err);
+      }
+    }
+    fetchProducts();
+    fetchCategoriesList();
+  }, []);
+
   // Filter Logic
-  let filtered = MOCK_PRODUCTS.filter((product) => {
+  let filtered = allProducts.filter((product) => {
     // Category Filter
     if (selectedCategory !== "ALL" && selectedCategory !== "new-arrivals") {
       if (product.categorySlug !== selectedCategory) return false;
@@ -280,6 +318,7 @@ function ProductsContent() {
                 setSelectedSize={setSelectedSize}
                 priceRange={priceRange}
                 setPriceRange={setPriceRange}
+                categoriesList={categoriesList}
               />
             </div>
 
@@ -316,6 +355,7 @@ function ProductsContent() {
             setSelectedSize={setSelectedSize}
             priceRange={priceRange}
             setPriceRange={setPriceRange}
+            categoriesList={categoriesList}
           />
         </aside>
 
@@ -350,25 +390,89 @@ function ProductsContent() {
                   const wishlisted = isWishlisted(product.id);
                   const currentSize = selectedSizes[product.id] || product.variants[0]?.size || "M";
 
+                  const allMedia = [
+                    ...(Array.isArray(product.images) ? product.images : []),
+                    ...((product as unknown as { media?: Array<{ url: string; type?: string }> }).media || []),
+                  ].filter((m) => m && m.url && !m.url.includes("photo-1583391733975"));
+
+                  const checkIsVideoUrl = (item?: { url?: string; type?: string }) => {
+                    if (!item?.url) return false;
+                    if ((item as { type?: string }).type === "VIDEO") return true;
+                    const clean = item.url.toLowerCase().split("?")[0];
+                    return (
+                      clean.includes("data:video") ||
+                      clean.endsWith(".mp4") ||
+                      clean.endsWith(".webm") ||
+                      clean.endsWith(".mov") ||
+                      clean.endsWith(".m4v") ||
+                      clean.endsWith(".ogg") ||
+                      clean.includes("/video/upload/") ||
+                      clean.includes("commondatastorage.googleapis.com")
+                    );
+                  };
+
+                  const videoItem = allMedia.find((m) => checkIsVideoUrl(m));
+                  const primaryItem = videoItem || allMedia[0];
+                  const secondaryItem = allMedia.find((m) => m !== primaryItem) || allMedia[1];
+
+                  const primaryUrl = primaryItem?.url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=800";
+                  const secondaryUrl = secondaryItem?.url;
+
+                  const isPrimaryVideo = checkIsVideoUrl(primaryItem);
+                  const isSecondaryVideo = checkIsVideoUrl(secondaryItem);
+
                   return (
                     <div
                       key={product.id}
                       className="group bg-white rounded-2xl overflow-hidden border border-amber-900/10 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
                     >
-                      {/* Image Box */}
+                      {/* Image / Video Box */}
                       <div className="relative aspect-[3/4] overflow-hidden bg-zinc-100">
-                        <Link href={`/products/${product.slug}`}>
-                          <img
-                            src={product.images[0]?.url}
-                            alt={product.name}
-                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                          />
-                          {product.images[1] && (
-                            <img
-                              src={product.images[1]?.url}
-                              alt={`${product.name} preview`}
-                              className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                        <Link href={`/products/${product.slug}`} className="block w-full h-full">
+                          {isPrimaryVideo ? (
+                            <video
+                              ref={(el) => {
+                                if (el) {
+                                  el.muted = true;
+                                  el.play().catch(() => {});
+                                }
+                              }}
+                              src={primaryUrl}
+                              autoPlay
+                              loop
+                              muted
+                              playsInline
+                              aria-label={product.name}
+                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                             />
+                          ) : (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img
+                              src={primaryUrl}
+                              alt={product.name}
+                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                            />
+                          )}
+
+                          {secondaryUrl && (
+                            isSecondaryVideo ? (
+                              <video
+                                src={secondaryUrl}
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                                aria-label={`${product.name} preview`}
+                                className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                              />
+                            ) : (
+                              /* eslint-disable-next-line @next/next/no-img-element */
+                              <img
+                                src={secondaryUrl}
+                                alt={`${product.name} preview`}
+                                className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                              />
+                            )
                           )}
                         </Link>
 
@@ -428,8 +532,8 @@ function ProductsContent() {
                                 key={v.id}
                                 onClick={() => setSelectedSizes((prev) => ({ ...prev, [product.id]: v.size }))}
                                 className={`text-[10px] font-bold w-7 h-7 rounded-md border flex items-center justify-center transition-all ${currentSize === v.size
-                                    ? "bg-zinc-900 text-white border-zinc-900"
-                                    : "border-zinc-200 text-zinc-600 hover:border-zinc-400"
+                                  ? "bg-zinc-900 text-white border-zinc-900"
+                                  : "border-zinc-200 text-zinc-600 hover:border-zinc-400"
                                   }`}
                               >
                                 {v.size}

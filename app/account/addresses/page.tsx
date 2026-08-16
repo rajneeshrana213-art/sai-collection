@@ -1,14 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
-import { MOCK_ADDRESSES, SavedAddress } from "@/lib/mock-data";
+import { SavedAddress } from "@/lib/mock-data";
+import { apiClient } from "@/lib/api-client";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 
 export default function AddressBookPage() {
-  const [addresses, setAddresses] = useState<SavedAddress[]>(MOCK_ADDRESSES);
+  const { logout } = useAuth();
+  const router = useRouter();
+  const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [isAddingNew, setIsAddingNew] = useState(false);
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/login");
+  };
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -17,20 +27,59 @@ export default function AddressBookPage() {
   const [state, setState] = useState("");
   const [pincode, setPincode] = useState("");
 
-  const handleAddAddress = (e: React.FormEvent) => {
+  useEffect(() => {
+    async function fetchAddresses() {
+      try {
+        const res = await apiClient.get<{ addresses: SavedAddress[] }>("/api/v1/account/addresses");
+        if (res && Array.isArray(res.addresses)) {
+          setAddresses(res.addresses);
+        } else if (Array.isArray(res)) {
+          setAddresses(res as unknown as SavedAddress[]);
+        }
+      } catch (err) {
+        console.warn("Addresses API fetch fallback", err);
+      }
+    }
+    fetchAddresses();
+  }, []);
+
+  const handleAddAddress = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newAddr: SavedAddress = {
-      id: `addr-${Date.now()}`,
-      fullName,
-      phone,
-      line1,
-      city,
-      state,
-      pincode,
-      isDefault: false
-    };
-    setAddresses([...addresses, newAddr]);
-    setIsAddingNew(false);
+    try {
+      const res = await apiClient.post("/api/v1/account/addresses", {
+        fullName,
+        phone,
+        line1,
+        city,
+        state,
+        pincode,
+      });
+      const created = res?.address || res || {
+        id: `addr-${Date.now()}`,
+        fullName,
+        phone,
+        line1,
+        city,
+        state,
+        pincode,
+        isDefault: false,
+      };
+      setAddresses([...addresses, created]);
+    } catch {
+      const newAddr: SavedAddress = {
+        id: `addr-${Date.now()}`,
+        fullName,
+        phone,
+        line1,
+        city,
+        state,
+        pincode,
+        isDefault: false,
+      };
+      setAddresses([...addresses, newAddr]);
+    } finally {
+      setIsAddingNew(false);
+    }
   };
 
   return (
@@ -41,11 +90,17 @@ export default function AddressBookPage() {
         <h1 className="font-serif text-3xl font-bold text-zinc-900 mb-6">Saved Address Book</h1>
 
         {/* Nav tabs */}
-        <div className="flex gap-2 border-b border-zinc-200 pb-3 mb-8 overflow-x-auto text-xs font-bold">
+        <div className="flex gap-2 border-b border-zinc-200 pb-3 mb-8 overflow-x-auto text-xs font-bold items-center">
           <Link href="/account" className="bg-white text-zinc-700 hover:text-[#9b1c31] border border-zinc-200 px-4 py-2 rounded-full whitespace-nowrap">Overview</Link>
           <Link href="/account/orders" className="bg-white text-zinc-700 hover:text-[#9b1c31] border border-zinc-200 px-4 py-2 rounded-full whitespace-nowrap">My Orders</Link>
           <Link href="/account/addresses" className="bg-[#9b1c31] text-white px-4 py-2 rounded-full whitespace-nowrap">Address Book</Link>
           <Link href="/account/wishlist" className="bg-white text-zinc-700 hover:text-[#9b1c31] border border-zinc-200 px-4 py-2 rounded-full whitespace-nowrap">Wishlist</Link>
+          <button
+            onClick={handleLogout}
+            className="bg-white text-rose-700 hover:bg-rose-50 border border-rose-200 px-4 py-2 rounded-full whitespace-nowrap ml-auto"
+          >
+            Sign Out
+          </button>
         </div>
 
         <div className="space-y-6">

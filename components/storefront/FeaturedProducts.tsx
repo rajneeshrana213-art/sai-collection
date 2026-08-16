@@ -1,9 +1,17 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import Link from "next/link";
-import { MOCK_PRODUCTS, Product } from "@/lib/mock-data";
+import { Product } from "@/lib/mock-data";
 import { useCart } from "@/context/CartContext";
+import { apiClient } from "@/lib/api-client";
+
+interface StoreCategory {
+  id: string;
+  name: string;
+  slug: string;
+  badge?: string;
+}
 
 interface CollectionSectionProps {
   title: string;
@@ -96,6 +104,37 @@ const CollectionCarouselSection: React.FC<CollectionSectionProps> = ({
               : 0;
             const wishlisted = isWishlisted(product.id);
 
+            const allMedia = [
+              ...(Array.isArray(product.images) ? product.images : []),
+              ...((product as unknown as { media?: Array<{ url: string; type?: string }> }).media || []),
+            ].filter((m) => m && m.url && !m.url.includes("photo-1583391733975"));
+
+            const checkIsVideoUrl = (item?: { url?: string; type?: string }) => {
+              if (!item?.url) return false;
+              if ((item as { type?: string }).type === "VIDEO") return true;
+              const clean = item.url.toLowerCase().split("?")[0];
+              return (
+                clean.includes("data:video") ||
+                clean.endsWith(".mp4") ||
+                clean.endsWith(".webm") ||
+                clean.endsWith(".mov") ||
+                clean.endsWith(".m4v") ||
+                clean.endsWith(".ogg") ||
+                clean.includes("/video/upload/") ||
+                clean.includes("commondatastorage.googleapis.com")
+              );
+            };
+
+            const videoItem = allMedia.find((m) => checkIsVideoUrl(m));
+            const primaryItem = videoItem || allMedia[0];
+            const secondaryItem = allMedia.find((m) => m !== primaryItem) || allMedia[1];
+
+            const primaryUrl = primaryItem?.url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=800";
+            const secondaryUrl = secondaryItem?.url;
+
+            const isPrimaryVideo = checkIsVideoUrl(primaryItem);
+            const isSecondaryVideo = checkIsVideoUrl(secondaryItem);
+
             return (
               <div
                 key={product.id}
@@ -105,27 +144,63 @@ const CollectionCarouselSection: React.FC<CollectionSectionProps> = ({
                     : "group shrink-0 w-64 sm:w-72 bg-white border border-zinc-200 overflow-hidden flex flex-col justify-between transition-all duration-300 hover:shadow-xl"
                 }
               >
-                {/* Product Image & Badges */}
+                {/* Product Image / Video & Badges */}
                 <div className="relative aspect-3/4 overflow-hidden bg-zinc-100">
-                  <Link href={`/products/${product.slug}`}>
-                    {/* Primary Image with Hover Zoom */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={product.images[0]?.url}
-                      alt={product.name}
-                      className={
-                        isNewArrivalsLayout
-                          ? "w-full h-full object-cover object-center"
-                          : "w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
-                      }
-                    />
-                    {!isNewArrivalsLayout && product.images[1] && (
+                  <Link href={`/products/${product.slug}`} className="block w-full h-full">
+                    {/* Primary Media (Video or Image) */}
+                    {isPrimaryVideo ? (
+                      <video
+                        ref={(el) => {
+                          if (el) {
+                            el.muted = true;
+                            el.play().catch(() => {});
+                          }
+                        }}
+                        src={primaryUrl}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        aria-label={product.name}
+                        className={
+                          isNewArrivalsLayout
+                            ? "w-full h-full object-cover object-center"
+                            : "w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                        }
+                      />
+                    ) : (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img
-                        src={product.images[1]?.url}
-                        alt={`${product.name} alternate view`}
-                        className="absolute inset-0 w-full h-full object-cover object-center opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                        src={primaryUrl}
+                        alt={product.name}
+                        className={
+                          isNewArrivalsLayout
+                            ? "w-full h-full object-cover object-center"
+                            : "w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                        }
                       />
+                    )}
+
+                    {/* Secondary Media on Hover */}
+                    {!isNewArrivalsLayout && secondaryUrl && (
+                      isSecondaryVideo ? (
+                        <video
+                          src={secondaryUrl}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          aria-label={`${product.name} alternate view`}
+                          className="absolute inset-0 w-full h-full object-cover object-center opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                        />
+                      ) : (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src={secondaryUrl}
+                          alt={`${product.name} alternate view`}
+                          className="absolute inset-0 w-full h-full object-cover object-center opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                        />
+                      )
                     )}
                   </Link>
 
@@ -147,37 +222,29 @@ const CollectionCarouselSection: React.FC<CollectionSectionProps> = ({
                   {!isNewArrivalsLayout && (
                     <button
                       onClick={() => toggleWishlist(product.id)}
-                      className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-white/90 hover:bg-white text-zinc-800 hover:text-red-600 transition-colors shadow-sm"
-                      aria-label="Wishlist"
+                      className={`absolute top-2 right-2 p-2 rounded-full backdrop-blur-md transition-all z-10 ${wishlisted ? "bg-rose-500 text-white" : "bg-white/80 text-zinc-700 hover:bg-white"
+                        }`}
+                      title={wishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
                     >
-                      <svg
-                        className={`w-4 h-4 ${wishlisted ? "fill-red-600 text-red-600" : "fill-none text-zinc-700"}`}
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                        />
+                      <svg className="w-4 h-4" fill={wishlisted ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                       </svg>
                     </button>
                   )}
                 </div>
 
-                {/* Product Info */}
-                <div className={isNewArrivalsLayout ? "px-3 pt-3 pb-2 text-center space-y-2" : "p-4 space-y-2 flex-1 flex flex-col justify-between"}>
-                  <Link href={`/products/${product.slug}`}>
-                    <h3 className={isNewArrivalsLayout ? "font-sans text-[16px] leading-[1.35] text-zinc-700 line-clamp-2" : "font-serif text-sm font-semibold text-zinc-900 line-clamp-1 group-hover:text-amber-900 transition-colors uppercase tracking-wider"}>
+                {/* Product Title & Details */}
+                <div className="p-3 text-center space-y-1">
+                  <h3 className="font-sans font-medium text-xs sm:text-sm text-zinc-900 truncate uppercase tracking-wider">
+                    <Link href={`/products/${product.slug}`} className="hover:text-amber-800 transition-colors">
                       {product.name}
-                    </h3>
-                  </Link>
+                    </Link>
+                  </h3>
 
-                  <div className={isNewArrivalsLayout ? "text-[16px] sm:text-[18px] font-extrabold text-zinc-800" : "flex items-center gap-2 text-xs font-semibold"}>
-                    <span className="text-zinc-900">{formatCurrency(product.basePrice)}</span>
+                  <div className="flex items-center justify-center gap-2 text-xs font-semibold">
+                    <span className="text-zinc-900 font-bold">{formatCurrency(product.basePrice)}</span>
                     {hasDiscount && (
-                      <span className={isNewArrivalsLayout ? "hidden" : "text-zinc-400 line-through font-normal text-[11px]"}>
+                      <span className="text-zinc-400 line-through text-[11px] font-normal">
                         ₹{(product.originalPrice! / 100).toLocaleString("en-IN")}
                       </span>
                     )}
@@ -188,7 +255,8 @@ const CollectionCarouselSection: React.FC<CollectionSectionProps> = ({
           })}
         </div>
 
-        {isNewArrivalsLayout && (
+        {/* Desktop Carousel Navigation Arrows */}
+        {isNewArrivalsLayout && products.length > 4 && (
           <>
             <button
               onClick={() => scroll("left")}
@@ -214,13 +282,72 @@ const CollectionCarouselSection: React.FC<CollectionSectionProps> = ({
 };
 
 export const FeaturedProducts: React.FC = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<StoreCategory[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [prodRes, catRes] = await Promise.all([
+          apiClient.get<{ products: Product[] }>("/api/v1/products?limit=24"),
+          apiClient.get<{ categories: StoreCategory[] }>("/api/v1/categories"),
+        ]);
+
+        if (prodRes && Array.isArray(prodRes.products)) {
+          setProducts(prodRes.products);
+        } else if (Array.isArray(prodRes)) {
+          setProducts(prodRes as unknown as Product[]);
+        }
+
+        if (catRes && Array.isArray(catRes.categories)) {
+          setCategories(catRes.categories);
+        } else if (Array.isArray(catRes)) {
+          setCategories(catRes as unknown as StoreCategory[]);
+        }
+      } catch (err) {
+        console.warn("Featured products API fetch error", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  const onSaleProducts = products.filter((p) => p.originalPrice && p.originalPrice > p.basePrice);
+
+  if (isLoading) {
+    return (
+      <section className="py-8 px-4 sm:px-6 lg:px-8 w-full mx-auto space-y-12">
+        {["NEW ARRIVALS", "TRENDING", "SALE"].map((title) => (
+          <div key={title} className="py-6 font-sans">
+            <div className="text-center mb-5">
+              <h2 className="font-sans text-3xl sm:text-4xl font-semibold tracking-[0.18em] text-zinc-300 animate-pulse uppercase">
+                {title}
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="space-y-3 animate-pulse">
+                  <div className="aspect-3/4 bg-zinc-200/80 rounded-xl"></div>
+                  <div className="h-4 bg-zinc-200/80 rounded w-3/4 mx-auto"></div>
+                  <div className="h-4 bg-zinc-200/80 rounded w-1/2 mx-auto"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </section>
+    );
+  }
+
   return (
     <section className="py-8 px-4 sm:px-6 lg:px-8 w-full mx-auto space-y-8">
       {/* 1. NEW ARRIVALS */}
       <CollectionCarouselSection
         title="NEW ARRIVALS"
         viewMoreHref="/products?category=new-arrivals"
-        products={MOCK_PRODUCTS.slice(0, 6)}
+        products={products.slice(0, 6)}
         layout="new-arrivals"
       />
 
@@ -228,7 +355,7 @@ export const FeaturedProducts: React.FC = () => {
       <CollectionCarouselSection
         title="TRENDING"
         viewMoreHref="/products?tag=trending"
-        products={MOCK_PRODUCTS.slice(1, 7)}
+        products={products.slice(1, 7)}
         layout="new-arrivals"
       />
 
@@ -236,50 +363,36 @@ export const FeaturedProducts: React.FC = () => {
       <CollectionCarouselSection
         title="SALE"
         viewMoreHref="/products?onSale=true"
-        products={MOCK_PRODUCTS.filter((p) => p.originalPrice && p.originalPrice > p.basePrice)}
+        products={onSaleProducts.length > 0 ? onSaleProducts : products.slice(0, 6)}
         layout="new-arrivals"
       />
 
-      {/* 4. STRAIGHT SUITS */}
-      <CollectionCarouselSection
-        title="STRAIGHT SUITS"
-        viewMoreHref="/products?category=straight-suits"
-        products={MOCK_PRODUCTS.slice(0, 5)}
-        layout="new-arrivals"
-      />
+      {/* Dynamic Store Categories Sections fetched from database */}
+      {categories
+        .filter((cat) => cat.slug !== "new-arrivals")
+        .map((cat, idx) => {
+          const categoryProducts = products.filter(
+            (p) =>
+              p.categorySlug === cat.slug ||
+              (typeof p.category === "string" && p.category.toLowerCase() === cat.name.toLowerCase()) ||
+              p.subCategorySlug === cat.slug
+          );
+          // If no specific products assigned to this category yet, fallback to balanced product slice
+          const displayProducts =
+            categoryProducts.length > 0
+              ? categoryProducts
+              : products.slice(idx % 4, (idx % 4) + 6);
 
-      {/* 5. INDO WESTERN */}
-      <CollectionCarouselSection
-        title="INDO WESTERN"
-        viewMoreHref="/products?category=indo-westerns"
-        products={MOCK_PRODUCTS.slice(2, 7)}
-        layout="new-arrivals"
-      />
-
-      {/* 6. ANARKALI SUITS */}
-      <CollectionCarouselSection
-        title="ANARKALI SUITS"
-        viewMoreHref="/products?category=anarkali"
-        products={MOCK_PRODUCTS.slice(1, 6)}
-        layout="new-arrivals"
-      />
-
-      {/* 7. SHARARA SUITS */}
-      <CollectionCarouselSection
-        title="SHARARA SUITS"
-        viewMoreHref="/products?category=sharara-suits"
-        products={MOCK_PRODUCTS.slice(0, 5)}
-        layout="new-arrivals"
-      />
-
-      {/* 8. 3XL SIZE */}
-      <CollectionCarouselSection
-        title="3XL SIZE"
-        viewMoreHref="/products?category=3xl"
-        products={MOCK_PRODUCTS.slice(3, 7)}
-        layout="new-arrivals"
-      />
+          return (
+            <CollectionCarouselSection
+              key={cat.id || cat.slug}
+              title={cat.name.toUpperCase()}
+              viewMoreHref={`/products?category=${cat.slug}`}
+              products={displayProducts}
+              layout="new-arrivals"
+            />
+          );
+        })}
     </section>
   );
 };
-

@@ -3,11 +3,14 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
-import { MOCK_PRODUCTS } from "@/lib/mock-data";
+import { Product } from "@/lib/mock-data";
+import { apiClient } from "@/lib/api-client";
+import Image from "next/image";
 
 export const QuickSearchModal: React.FC = () => {
   const { isSearchOpen, closeSearch } = useCart();
   const [query, setQuery] = useState("");
+  const [results, setResults] = useState<Product[]>([]);
 
   useEffect(() => {
     if (isSearchOpen) {
@@ -23,16 +26,31 @@ export const QuickSearchModal: React.FC = () => {
     };
   }, [isSearchOpen]);
 
-  if (!isSearchOpen) return null;
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (!query.trim()) {
+        setResults([]);
+        return;
+      }
+      try {
+        const res = await apiClient.get<{ products: Product[] }>(
+          `/api/v1/search?q=${encodeURIComponent(query)}`
+        );
+        if (res && Array.isArray(res.products)) {
+          setResults(res.products);
+        } else if (Array.isArray(res)) {
+          setResults(res as unknown as Product[]);
+        }
+      } catch (err) {
+        console.warn("Quick search error", err);
+        setResults([]);
+      }
+    }, 300);
 
-  const results = query.trim() === ""
-    ? []
-    : MOCK_PRODUCTS.filter(
-        (p) =>
-          p.name.toLowerCase().includes(query.toLowerCase()) ||
-          p.category.toLowerCase().includes(query.toLowerCase()) ||
-          p.description.toLowerCase().includes(query.toLowerCase())
-      );
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  if (!isSearchOpen) return null;
 
   const formatCurrency = (paise: number) => `₹${(paise / 100).toLocaleString("en-IN")}`;
 
@@ -46,7 +64,7 @@ export const QuickSearchModal: React.FC = () => {
 
       <div className="relative min-h-screen px-4 pt-16 pb-20 text-center sm:block sm:p-0">
         <div className="inline-block w-full max-w-2xl my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-2xl rounded-2xl border border-amber-900/10 z-50 relative">
-          
+
           {/* Search Header */}
           <div className="p-4 sm:p-6 border-b border-zinc-100 flex items-center gap-3">
             <svg className="w-6 h-6 text-amber-800 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -104,9 +122,11 @@ export const QuickSearchModal: React.FC = () => {
                   onClick={closeSearch}
                   className="flex items-center gap-4 p-3 hover:bg-amber-50/60 rounded-xl transition-colors group border border-transparent hover:border-amber-200"
                 >
-                  <img
+                  <Image
                     src={product.images[0]?.url}
                     alt={product.name}
+                    width={56}
+                    height={64}
                     className="w-14 h-16 object-cover rounded-lg bg-zinc-100 shrink-0"
                   />
                   <div className="flex-1 min-w-0">

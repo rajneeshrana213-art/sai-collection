@@ -1,25 +1,57 @@
 "use client";
 
-import React, { useState } from "react";
-import { MOCK_CUSTOMERS } from "@/lib/mock-data";
+import React, { useState, useEffect } from "react";
 import { Pagination } from "@/components/common/Pagination";
 import { useAdminTheme } from "@/context/AdminThemeContext";
+import { apiClient } from "@/lib/api-client";
+
+interface Customer {
+  id: string | number;
+  name: string;
+  phone: string;
+  email: string;
+  city: string;
+  totalOrders: number;
+  totalSpent: number;
+  joinedDate: string;
+}
 
 export default function AdminCustomersPage() {
   const { theme } = useAdminTheme();
   const isLight = theme === "light";
 
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 3;
 
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchCustomers() {
+      try {
+        const res = await apiClient.get<{ customers: Customer[] } | Customer[]>("/api/v1/admin/customers");
+        if (res && !Array.isArray(res) && Array.isArray((res as { customers: Customer[] }).customers)) {
+          setCustomers((res as { customers: Customer[] }).customers);
+        } else if (Array.isArray(res)) {
+          setCustomers(res as Customer[]);
+        }
+      } catch (err) {
+        console.warn("Admin customers API fetch error", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchCustomers();
+  }, []);
+
   const formatCurrency = (paise: number) => `₹${(paise / 100).toLocaleString("en-IN")}`;
 
-  const filteredCustomers = MOCK_CUSTOMERS.filter(
+  const filteredCustomers = customers.filter(
     (c) =>
-      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.phone.includes(searchTerm) ||
-      c.email.toLowerCase().includes(searchTerm.toLowerCase())
+      (c.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (c.phone || "").includes(searchTerm) ||
+      (c.email || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const paginatedCustomers = filteredCustomers.slice(
@@ -36,7 +68,7 @@ export default function AdminCustomersPage() {
 
   return (
     <div className="space-y-6 text-xs">
-      
+
       {/* Header */}
       <div>
         <h1 className={`font-serif text-2xl sm:text-3xl font-bold ${textTitle}`}>Customer Database</h1>
@@ -73,7 +105,23 @@ export default function AdminCustomersPage() {
               </tr>
             </thead>
             <tbody className={`divide-y ${isLight ? "divide-zinc-200 text-zinc-700" : "divide-zinc-800 text-zinc-300"}`}>
-              {paginatedCustomers.map((c) => (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={7} className={`p-12 text-center text-xs font-semibold ${textSub}`}>
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="animate-spin text-base">⏳</span>
+                      <span>Loading customer directory from database...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : paginatedCustomers.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className={`p-12 text-center text-xs font-semibold ${textSub}`}>
+                    No registered customers found.
+                  </td>
+                </tr>
+              ) : (
+                paginatedCustomers.map((c) => (
                 <tr key={c.id} className={isLight ? "hover:bg-zinc-50 transition-colors" : "hover:bg-zinc-800/40 transition-colors"}>
                   <td className={`p-4 font-bold ${textTitle}`}>{c.name}</td>
                   <td className="p-4 font-mono text-amber-600 dark:text-amber-300 font-bold">{c.phone}</td>
@@ -83,7 +131,7 @@ export default function AdminCustomersPage() {
                   <td className="p-4 font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(c.totalSpent)}</td>
                   <td className={`p-4 ${textSub}`}>{c.joinedDate}</td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>

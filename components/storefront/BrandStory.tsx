@@ -16,6 +16,7 @@ export const BrandStory: React.FC = () => {
               <Image
                 src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&q=80&w=1000"
                 alt="Sai Collection Panipat Artisan Craftsmanship"
+                fill
                 className="w-full h-full object-cover"
               />
             </div>

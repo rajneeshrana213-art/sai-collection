@@ -1,24 +1,48 @@
 "use client";
 
-import React, { useState } from "react";
-import { MOCK_ORDERS, Order } from "@/lib/mock-data";
+import React, { useState, useEffect } from "react";
+import { Order } from "@/lib/mock-data";
 import { Pagination } from "@/components/common/Pagination";
 import { useAdminTheme } from "@/context/AdminThemeContext";
+import { apiClient } from "@/lib/api-client";
+import { TaxInvoiceModal } from "@/components/common/TaxInvoiceModal";
 
 export default function AdminOrdersPage() {
   const { theme } = useAdminTheme();
   const isLight = theme === "light";
 
-  const [orders, setOrders] = useState<Order[]>(MOCK_ORDERS);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 3;
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    async function fetchAdminOrders() {
+      try {
+        const res = await apiClient.get<{ orders: Order[] }>("/api/v1/admin/orders");
+        if (res && Array.isArray(res.orders)) {
+          setOrders(res.orders);
+        } else if (Array.isArray(res)) {
+          setOrders(res as unknown as Order[]);
+        }
+      } catch (err) {
+        console.warn("Admin orders API fetch error", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchAdminOrders();
+  }, []);
 
   // Status Updater Modal State
   const [newStatus, setNewStatus] = useState<Order["status"]>("SHIPPED");
   const [courierName, setCourierName] = useState("Delhivery Express");
-  const [trackingNumber, setTrackingNumber] = useState("DELHIVERY" + Math.floor(100000 + Math.random() * 900000));
+  const [trackingNumber, setTrackingNumber] = useState("");
 
   const formatCurrency = (paise: number) => `₹${(paise / 100).toLocaleString("en-IN")}`;
 
@@ -27,20 +51,34 @@ export default function AdminOrdersPage() {
     return o.status === statusFilter;
   });
 
-  const handleUpdateOrderStatus = (e: React.FormEvent) => {
+  const handleUpdateOrderStatus = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedOrder) return;
+    setIsSubmitting(true);
 
-    const updatedOrder: Order = {
-      ...selectedOrder,
-      status: newStatus,
-      courierName,
-      trackingNumber,
-      estimatedDelivery: "August 16, 2026"
-    };
+    try {
+      const orderId = (selectedOrder as unknown as { id?: string }).id || selectedOrder.orderNumber;
+      await apiClient.patch(`/api/v1/admin/orders/${orderId}`, {
+        status: newStatus,
+        courierName,
+        trackingNumber,
+      });
 
-    setOrders(orders.map((o) => (o.orderNumber === selectedOrder.orderNumber ? updatedOrder : o)));
-    setSelectedOrder(null);
+      const updatedOrder: Order = {
+        ...selectedOrder,
+        status: newStatus,
+        courierName,
+        trackingNumber,
+        estimatedDelivery: "August 16, 2026"
+      };
+
+      setOrders((prev) => prev.map((o) => o.orderNumber === selectedOrder.orderNumber ? updatedOrder : o));
+      setSelectedOrder(null);
+    } catch (err) {
+      console.warn("API status update error", err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Theme helper classes
@@ -99,9 +137,25 @@ export default function AdminOrdersPage() {
               </tr>
             </thead>
             <tbody className={`divide-y ${isLight ? "divide-zinc-200 text-zinc-700" : "divide-zinc-800 text-zinc-300"}`}>
-              {filteredOrders
-                .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-                .map((order) => (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={7} className={`p-12 text-center text-xs font-semibold ${textSub}`}>
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="animate-spin text-base">⏳</span>
+                      <span>Loading customer orders from database...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredOrders.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className={`p-12 text-center text-xs font-semibold ${textSub}`}>
+                    No orders found matching status filter.
+                  </td>
+                </tr>
+              ) : (
+                filteredOrders
+                  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                  .map((order) => (
                 <tr key={order.orderNumber} className={tableRowHover}>
                   <td className="p-4">
                     <strong className={`text-sm font-bold block ${textTitle}`}>{order.orderNumber}</strong>
@@ -109,11 +163,16 @@ export default function AdminOrdersPage() {
                   </td>
 
                   <td className="p-4">
-                    <strong className={`block ${isLight ? "text-zinc-900 font-bold" : "text-zinc-200"}`}>{order.shippingAddress.fullName}</strong>
+                    <strong className={`block ${isLight ? "text-zinc-900 font-bold" : "text-zinc-200"}`}>
+                      {order.shippingAddress?.fullName || (order.shippingAddress as unknown as { name?: string })?.name || (order as unknown as { customerName?: string }).customerName || "Valued Customer"}
+                    </strong>
                     <span className={`text-[10px] ${textSub} block`}>
-                      {order.shippingAddress.city}, {order.shippingAddress.state} ({order.shippingAddress.pincode})
+                      {[order.shippingAddress?.city, order.shippingAddress?.state].filter(Boolean).join(", ")}
+                      {order.shippingAddress?.pincode ? ` (${order.shippingAddress.pincode})` : ""}
                     </span>
-                    <span className="text-[10px] text-amber-600 dark:text-amber-300 font-mono">{order.shippingAddress.phone}</span>
+                    {order.shippingAddress?.phone && (
+                      <span className="text-[10px] text-amber-600 dark:text-amber-300 font-mono">{order.shippingAddress.phone}</span>
+                    )}
                   </td>
 
                   <td className={`p-4 font-bold ${textTitle}`}>{order.items.length} item(s)</td>
@@ -151,22 +210,36 @@ export default function AdminOrdersPage() {
                   </td>
 
                   <td className="p-4 text-right">
-                    <button
-                      onClick={() => {
-                        setSelectedOrder(order);
-                        setNewStatus(order.status);
-                      }}
-                      className={`font-bold px-3 py-1.5 rounded-lg border transition-colors ${
-                        isLight
-                          ? "bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300"
-                          : "bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40"
-                      }`}
-                    >
-                      Update Status
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => setInvoiceOrder(order)}
+                        className={`font-bold px-3 py-1.5 rounded-lg border transition-colors ${
+                          isLight
+                            ? "bg-zinc-100 hover:bg-zinc-200 text-zinc-800 border-zinc-300"
+                            : "bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700"
+                        }`}
+                      >
+                        📄 Invoice
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedOrder(order);
+                          setNewStatus(order.status);
+                          setCourierName(order.courierName || "Delhivery Express");
+                          setTrackingNumber(order.trackingNumber || ("DELHIVERY" + Math.floor(100000 + Math.random() * 900000)));
+                        }}
+                        className={`font-bold px-3 py-1.5 rounded-lg border transition-colors ${
+                          isLight
+                            ? "bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300"
+                            : "bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40"
+                        }`}
+                      >
+                        Update Status
+                      </button>
+                    </div>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>
@@ -196,7 +269,7 @@ export default function AdminOrdersPage() {
                 <label className="font-bold block mb-1">Select New Status *</label>
                 <select
                   value={newStatus}
-                  onChange={(e) => setNewStatus(e.target.value as any)}
+                  onChange={(e) => setNewStatus(e.target.value as Order["status"])}
                   className={`w-full rounded-lg p-2.5 font-bold ${bgInput}`}
                 >
                   <option value="CONFIRMED">CONFIRMED (Payment Verified)</option>
@@ -242,13 +315,26 @@ export default function AdminOrdersPage() {
               </button>
               <button
                 type="submit"
-                className="flex-1 bg-[#9b1c31] text-white font-bold py-2.5 rounded-xl shadow-md"
+                disabled={isSubmitting}
+                className="flex-1 bg-[#9b1c31] disabled:opacity-50 text-white font-bold py-2.5 rounded-xl shadow-md flex items-center justify-center gap-2"
               >
-                Save Order Status
+                {isSubmitting ? (
+                  <>
+                    <span className="animate-spin text-sm">⏳</span>
+                    <span>Updating...</span>
+                  </>
+                ) : (
+                  "Save Order Status"
+                )}
               </button>
             </div>
           </form>
         </div>
+      )}
+
+      {/* GST Tax Invoice Modal */}
+      {invoiceOrder && (
+        <TaxInvoiceModal order={invoiceOrder} onClose={() => setInvoiceOrder(null)} />
       )}
 
     </div>

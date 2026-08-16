@@ -5,24 +5,36 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
+import { useAuth } from "@/context/AuthContext";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
+  const { forgotPassword, resetPassword } = useAuth();
   const [step, setStep] = useState<"EMAIL" | "OTP_PASSWORD" | "SUCCESS">("EMAIL");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSendOtp = (e: React.FormEvent) => {
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
     setErrorMsg("");
-    setStep("OTP_PASSWORD");
+    setIsSubmitting(true);
+
+    try {
+      await forgotPassword(email);
+      setStep("OTP_PASSWORD");
+    } catch (err: unknown) {
+      setErrorMsg((err as Error).message || "Failed to send reset link/OTP. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleResetPassword = (e: React.FormEvent) => {
+  const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
 
@@ -36,7 +48,15 @@ export default function ForgotPasswordPage() {
       return;
     }
 
-    setStep("SUCCESS");
+    setIsSubmitting(true);
+    try {
+      await resetPassword(otp, newPassword);
+      setStep("SUCCESS");
+    } catch (err: unknown) {
+      setErrorMsg((err as Error).message || "Invalid or expired token/OTP.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -76,9 +96,10 @@ export default function ForgotPasswordPage() {
 
               <button
                 type="submit"
-                className="w-full bg-[#9b1c31] hover:bg-[#7d1324] text-white font-bold py-3.5 rounded-full shadow-md transition-all"
+                disabled={isSubmitting}
+                className="w-full bg-[#9b1c31] text-white font-bold py-3 rounded-full shadow-md hover:bg-rose-900 transition-colors disabled:opacity-50"
               >
-                Send Email OTP Code →
+                {isSubmitting ? "Sending..." : "Send Email OTP Code →"}
               </button>
 
               <div className="text-center text-xs text-zinc-500 pt-2 border-t border-zinc-100">

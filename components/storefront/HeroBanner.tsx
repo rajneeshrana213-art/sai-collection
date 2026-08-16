@@ -1,20 +1,31 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { apiClient } from "@/lib/api-client";
 
-const HERO_SLIDES = [
+interface HeroSlideItem {
+  id: string;
+  desktopImageUrl: string;
+  mobileImageUrl?: string;
+  targetLinkUrl: string;
+  title?: string;
+}
+
+const DEFAULT_SLIDES: HeroSlideItem[] = [
   {
-    id: 1,
-    title: "NEW ARRIVALS",
-    subtitle: "BUY DESIGNER ETHNIC WEAR & INDO-WESTERN AT SAI COLLECTION",
-    image: "/cover-page.png",
-    link: "/products",
-    badge: "Festive Collection '26",
+    id: "default-slide-1",
+    desktopImageUrl: "/cover-page.png",
+    mobileImageUrl: "/cover-page.png",
+    targetLinkUrl: "/products",
+    title: "Sai Collection New Arrivals",
   },
 ];
 
 export const HeroBanner: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [slides, setSlides] = useState<HeroSlideItem[]>(DEFAULT_SLIDES);
 
   const SAFETY_NOTICES = [
     "📌 Pls Note: We don't take orders on any WhatsApp numbers.",
@@ -25,77 +36,100 @@ export const HeroBanner: React.FC = () => {
   const MARQUEE_NOTICES = [...SAFETY_NOTICES, ...SAFETY_NOTICES];
 
   useEffect(() => {
+    async function fetchHeroSettings() {
+      try {
+        const res = await apiClient.get<{ settings?: Record<string, unknown> }>("/api/v1/settings");
+        if (res?.settings && Array.isArray(res.settings.heroSlides) && res.settings.heroSlides.length > 0) {
+          const loadedSlides = (res.settings.heroSlides as HeroSlideItem[]).map((slide, idx) => ({
+            id: slide.id || `slide-${idx}`,
+            desktopImageUrl: slide.desktopImageUrl || "/cover-page.png",
+            mobileImageUrl: slide.mobileImageUrl || slide.desktopImageUrl || "/cover-page.png",
+            targetLinkUrl: slide.targetLinkUrl || "/products",
+            title: slide.title || `Banner Slide ${idx + 1}`,
+          }));
+          setSlides(loadedSlides);
+        }
+      } catch (err) {
+        console.warn("Failed to fetch dynamic hero slides", err);
+      }
+    }
+    fetchHeroSettings();
+  }, []);
+
+  useEffect(() => {
+    if (slides.length <= 1) return;
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [slides.length]);
+
+  const activeSlideIndex = currentSlide % (slides.length || 1);
 
   return (
     <section className="w-full flex flex-col font-sans">
+      {/* 1. Clickable Image-First Hero Slider */}
+      <div className="relative w-full overflow-hidden bg-zinc-950">
+        <div className="relative w-full aspect-[16/6] sm:aspect-[16/5] min-h-[220px] max-h-[640px]">
+          {slides.map((slide, idx) => {
+            const isActive = idx === activeSlideIndex;
+            const desktopImg = slide.desktopImageUrl || "/cover-page.png";
+            const mobileImg = slide.mobileImageUrl || desktopImg;
+            const targetUrl = slide.targetLinkUrl || "/products";
 
-
-      {/* 1. Side Animation Slide Carousel Banner */}
-      <div className="relative overflow-hidden bg-zinc-950 min-h-[420px] sm:min-h-[550px] flex items-center">
-        {HERO_SLIDES.map((slide, idx) => {
-          const isActive = idx === currentSlide;
-          return (
-            <div
-              key={slide.id}
-              className={`absolute inset-0 transition-transform duration-700 ease-in-out flex items-center justify-center ${isActive
-                  ? "translate-x-0 opacity-100 z-10"
-                  : idx < currentSlide
-                    ? "-translate-x-full opacity-0 z-0"
-                    : "translate-x-full opacity-0 z-0"
-                }`}
-            >
-              {/* Background Image Overlay */}
+            return (
               <div
-                className="absolute inset-0 bg-cover bg-center opacity-70 scale-105 transition-transform duration-10000"
-                style={{ backgroundImage: `url('${slide.image}')` }}
-              />
-              <div className="absolute inset-0 " />
-
-              {/* Text & Button Content Overlay */}
-              {/* <div className="relative z-20 max-w-5xl mx-auto px-4 text-center text-white space-y-4 sm:space-y-6">
-                <span className="inline-block bg-white/20 backdrop-blur-md border border-white/30 text-white text-xs font-bold px-4 py-1.5 uppercase tracking-widest">
-                  {slide.badge}
-                </span>
-
-                <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-bold uppercase tracking-widest leading-tight">
-                  {slide.title}
-                </h1>
-
-                <p className="text-xs sm:text-sm text-zinc-200 uppercase tracking-widest font-medium max-w-xl mx-auto">
-                  {slide.subtitle}
-                </p>
-
-                <div className="pt-2">
-                  <Link
-                    href={slide.link}
-                    className="inline-block bg-white hover:bg-zinc-100 text-zinc-950 font-bold px-8 py-3.5 text-xs uppercase tracking-widest shadow-xl transition-all hover:scale-105 active:scale-95"
-                  >
-                    SHOP NOW →
-                  </Link>
-                </div>
-              </div> */}
-            </div>
-          );
-        })}
-
-        {/* Carousel Indicators / Controls */}
-        <div className="absolute bottom-5 inset-x-0 z-30 flex justify-center items-center gap-2">
-          {HERO_SLIDES.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrentSlide(i)}
-              className={`h-2 rounded-full transition-all ${i === currentSlide ? "w-8 bg-white" : "w-2 bg-white/40 hover:bg-white/70"
+                key={slide.id || idx}
+                className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+                  isActive ? "opacity-100 z-10 pointer-events-auto" : "opacity-0 z-0 pointer-events-none"
                 }`}
-              title={`Slide ${i + 1}`}
-            />
-          ))}
+              >
+                <Link href={targetUrl} className="block w-full h-full relative group">
+                  {/* Desktop Image */}
+                  <div className="hidden sm:block w-full h-full relative">
+                    <Image
+                      src={desktopImg}
+                      alt={slide.title || "Sai Collection Banner"}
+                      fill
+                      priority={idx === 0}
+                      className="object-cover object-center group-hover:scale-[1.01] transition-transform duration-500"
+                    />
+                  </div>
+
+                  {/* Mobile Image */}
+                  <div className="block sm:hidden w-full h-full relative">
+                    <Image
+                      src={mobileImg}
+                      alt={slide.title || "Sai Collection Banner"}
+                      fill
+                      priority={idx === 0}
+                      className="object-cover object-center"
+                    />
+                  </div>
+                </Link>
+              </div>
+            );
+          })}
         </div>
+
+        {/* Carousel Slide Indicators */}
+        {slides.length > 1 && (
+          <div className="absolute bottom-3 sm:bottom-5 inset-x-0 z-30 flex justify-center items-center gap-2">
+            {slides.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentSlide(i)}
+                className={`h-2 rounded-full transition-all ${
+                  i === activeSlideIndex ? "w-8 bg-white shadow-md" : "w-2 bg-white/50 hover:bg-white/80"
+                }`}
+                title={`Slide ${i + 1}`}
+                aria-label={`Slide ${i + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
+
       {/* 2. Sai Collection WhatsApp Safety Notice Auto Slider */}
       <div className="bg-zinc-900 border-y border-zinc-700 px-3 sm:px-4 py-2.5 text-white">
         <div className="relative overflow-hidden h-7 sm:h-8 flex items-center">
@@ -117,19 +151,12 @@ export const HeroBanner: React.FC = () => {
           animation: notice-marquee 22s linear infinite;
           will-change: transform;
         }
-
         @keyframes notice-marquee {
           0% {
-            transform: translateX(0%);
+            transform: translateX(0);
           }
           100% {
             transform: translateX(-50%);
-          }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .notice-marquee-track {
-            animation: none;
           }
         }
       `}</style>
@@ -137,3 +164,4 @@ export const HeroBanner: React.FC = () => {
   );
 };
 
+export const HeroSection = HeroBanner;

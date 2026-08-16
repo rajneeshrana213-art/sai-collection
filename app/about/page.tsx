@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
+
 import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
+import Image from "next/image";
 
 export default function AboutPage() {
   return (
@@ -22,9 +22,11 @@ export default function AboutPage() {
 
         {/* Feature Visual Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          <img
+          <Image
             src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&q=80&w=1000"
             alt="Sai Collection Panipat Weaving Heritage"
+            width={800}
+            height={600}
             className="rounded-3xl shadow-xl object-cover aspect-[4/3] w-full"
           />
           <div className="space-y-4 text-xs sm:text-sm text-zinc-700 font-light leading-relaxed">

@@ -1,0 +1,14 @@
+
+> sai-collection@0.1.0 lint
+> eslint
+
+
+D:\sai-collection\app\admin\settings\page.tsx
+    6:8  warning  'Image' is defined but never used                     @typescript-eslint/no-unused-vars
+  334:9  warning  'updatePromoCard' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+D:\sai-collection\components\storefront\Header.tsx
+  24:10  warning  'brandLogoUrl' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+✖ 3 problems (0 errors, 3 warnings)
+

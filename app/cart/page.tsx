@@ -6,6 +6,7 @@ import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
 import { QuickSearchModal } from "@/components/storefront/QuickSearchModal";
 import { useCart } from "@/context/CartContext";
+import Image from "next/image";
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, subtotal, freeShippingThreshold } = useCart();
@@ -84,9 +85,11 @@ export default function CartPage() {
               <div className="bg-white rounded-2xl border border-amber-900/10 divide-y divide-zinc-100 overflow-hidden shadow-sm">
                 {cart.map((item) => (
                   <div key={item.id} className="p-4 sm:p-6 flex gap-4 sm:gap-6 items-center">
-                    <img
+                    <Image
                       src={item.product.images[0]?.url}
                       alt={item.product.name}
+                      width={96}
+                      height={128}
                       className="w-20 h-24 sm:w-24 sm:h-32 object-cover rounded-xl bg-zinc-100 shrink-0"
                     />
 

@@ -1,21 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
+import { useAuth } from "@/context/AuthContext";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || searchParams.get("redirect") || "/account";
+
+  const { register } = useAuth();
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
 
@@ -29,7 +35,15 @@ export default function RegisterPage() {
       return;
     }
 
-    router.push("/account");
+    setIsSubmitting(true);
+    try {
+      await register({ name: fullName, email, password, phone });
+      router.push(callbackUrl);
+    } catch (err: unknown) {
+      setErrorMsg((err as Error).message || "Registration failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -112,15 +126,19 @@ export default function RegisterPage() {
 
             <button
               type="submit"
-              className="w-full bg-[#9b1c31] hover:bg-[#7d1324] text-white font-bold py-3.5 rounded-full shadow-md transition-all"
+              disabled={isSubmitting}
+              className="w-full bg-[#9b1c31] hover:bg-[#7d1324] text-white font-bold py-3.5 rounded-full shadow-md transition-all disabled:opacity-50"
             >
-              Create Account →
+              {isSubmitting ? "Creating Account..." : "Create Account →"}
             </button>
           </form>
 
           <div className="text-center text-xs text-zinc-500 pt-2 border-t border-zinc-100">
             Already have an account?{" "}
-            <Link href="/login" className="font-bold text-[#9b1c31] hover:underline">
+            <Link
+              href={callbackUrl !== "/account" ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}` : "/login"}
+              className="font-bold text-[#9b1c31] hover:underline"
+            >
               Sign In
             </Link>
           </div>
@@ -129,5 +147,13 @@ export default function RegisterPage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-xs font-bold">Loading Register...</div>}>
+      <RegisterForm />
+    </Suspense>
   );
 }

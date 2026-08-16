@@ -22,7 +22,10 @@ export const AdminThemeProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   useEffect(() => {
     const savedTheme = localStorage.getItem("sai_admin_theme") as ThemeMode;
     if (savedTheme === "light" || savedTheme === "dark") {
-      setThemeState(savedTheme);
+      const timer = setTimeout(() => {
+        setThemeState(savedTheme);
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, []);
 

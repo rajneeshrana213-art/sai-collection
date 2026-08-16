@@ -1,16 +1,43 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
 import { useCart } from "@/context/CartContext";
-import { MOCK_PRODUCTS } from "@/lib/mock-data";
+import { Product } from "@/lib/mock-data";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { apiClient } from "@/lib/api-client";
+import Image from "next/image";
 
 export default function WishlistPage() {
-  const { wishlist, toggleWishlist, addToCart } = useCart();
+  const { logout } = useAuth();
+  const router = useRouter();
+  const { toggleWishlist, addToCart } = useCart();
+  const [wishlistedProducts, setWishlistedProducts] = useState<Product[]>([]);
 
-  const wishlistedProducts = MOCK_PRODUCTS.filter((p) => wishlist.includes(p.id));
+  useEffect(() => {
+    async function fetchWishlist() {
+      try {
+        const res = await apiClient.get<{ wishlist: Product[] }>("/api/v1/account/wishlist");
+        if (res && Array.isArray(res.wishlist)) {
+          setWishlistedProducts(res.wishlist);
+        } else if (Array.isArray(res)) {
+          setWishlistedProducts(res as unknown as Product[]);
+        }
+      } catch (err) {
+        console.warn("Failed to fetch user wishlist", err);
+      }
+    }
+    fetchWishlist();
+  }, []);
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/login");
+  };
+
   const formatCurrency = (paise: number) => `₹${(paise / 100).toLocaleString("en-IN")}`;
 
   return (
@@ -21,11 +48,17 @@ export default function WishlistPage() {
         <h1 className="font-serif text-3xl font-bold text-zinc-900 mb-6">Saved Wishlist ({wishlistedProducts.length})</h1>
 
         {/* Nav tabs */}
-        <div className="flex gap-2 border-b border-zinc-200 pb-3 mb-8 overflow-x-auto text-xs font-bold">
+        <div className="flex gap-2 border-b border-zinc-200 pb-3 mb-8 overflow-x-auto text-xs font-bold items-center">
           <Link href="/account" className="bg-white text-zinc-700 hover:text-[#9b1c31] border border-zinc-200 px-4 py-2 rounded-full whitespace-nowrap">Overview</Link>
           <Link href="/account/orders" className="bg-white text-zinc-700 hover:text-[#9b1c31] border border-zinc-200 px-4 py-2 rounded-full whitespace-nowrap">My Orders</Link>
           <Link href="/account/addresses" className="bg-white text-zinc-700 hover:text-[#9b1c31] border border-zinc-200 px-4 py-2 rounded-full whitespace-nowrap">Address Book</Link>
           <Link href="/account/wishlist" className="bg-[#9b1c31] text-white px-4 py-2 rounded-full whitespace-nowrap">Wishlist</Link>
+          <button
+            onClick={handleLogout}
+            className="bg-white text-rose-700 hover:bg-rose-50 border border-rose-200 px-4 py-2 rounded-full whitespace-nowrap ml-auto"
+          >
+            Sign Out
+          </button>
         </div>
 
         {wishlistedProducts.length === 0 ? (
@@ -43,7 +76,7 @@ export default function WishlistPage() {
               <div key={product.id} className="bg-white rounded-2xl overflow-hidden border border-amber-900/10 shadow-sm flex flex-col justify-between">
                 <div className="relative aspect-[3/4] overflow-hidden bg-zinc-100">
                   <Link href={`/products/${product.slug}`}>
-                    <img src={product.images[0]?.url} alt={product.name} className="w-full h-full object-cover" />
+                    <Image src={product.images[0]?.url} alt={product.name} fill className="w-full h-full object-cover" />
                   </Link>
 
                   <button

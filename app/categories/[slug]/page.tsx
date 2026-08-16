@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Header } from "@/components/storefront/Header";
@@ -8,22 +8,51 @@ import { Footer } from "@/components/storefront/Footer";
 import { CartDrawer } from "@/components/storefront/CartDrawer";
 import { QuickSearchModal } from "@/components/storefront/QuickSearchModal";
 import { Pagination } from "@/components/common/Pagination";
-import { CATEGORIES, MOCK_PRODUCTS } from "@/lib/mock-data";
+import { Product, Category } from "@/lib/mock-data";
 import { useCart } from "@/context/CartContext";
+import { apiClient } from "@/lib/api-client";
+import Image from "next/image";
 
-export default function CategoryPage() {
+export default function CategoryProductsPage() {
   const params = useParams();
   const slug = params.slug as string;
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
-  const category = CATEGORIES.find((c) => c.slug === slug) || CATEGORIES[0];
-  const products = MOCK_PRODUCTS.filter((p) => p.categorySlug === category.slug || slug === "all");
+  const [category, setCategory] = useState<Category | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    async function fetchCategoryAndProducts() {
+      try {
+        const catRes = await apiClient.get<Category>(`/api/v1/categories/${slug}`);
+        if (catRes && catRes.id) {
+          setCategory(catRes);
+        }
+        const prodRes = await apiClient.get<{ products: Product[] }>(`/api/v1/products?category=${slug}`);
+        if (prodRes && Array.isArray(prodRes.products)) {
+          setProducts(prodRes.products);
+        } else if (Array.isArray(prodRes)) {
+          setProducts(prodRes as unknown as Product[]);
+        } else {
+          setProducts([]);
+        }
+      } catch (err) {
+        console.warn("Category API fetch error", err);
+        setProducts([]);
+      }
+    }
+    fetchCategoryAndProducts();
+  }, [slug]);
 
   const paginatedProducts = products.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const { addToCart, toggleWishlist, isWishlisted } = useCart();
   const formatCurrency = (paise: number) => `₹${(paise / 100).toLocaleString("en-IN")}`;
+
+  const categoryName = category?.name || slug.replace(/-/g, " ").toUpperCase();
+  const categoryImage = category?.imageUrl || "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&q=80&w=800";
+  const categoryDesc = category?.description || `Explore our exclusive ${categoryName} collection direct from Panipat.`;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fdfbf7]">
@@ -34,7 +63,7 @@ export default function CategoryPage() {
         <div className="relative rounded-3xl overflow-hidden bg-zinc-900 text-white p-8 sm:p-12 mb-10 border border-amber-900/20">
           <div
             className="absolute inset-0 bg-cover bg-center opacity-30"
-            style={{ backgroundImage: `url('${category.imageUrl}')` }}
+            style={{ backgroundImage: `url('${categoryImage}')` }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
 
@@ -43,9 +72,11 @@ export default function CategoryPage() {
               <Link href="/" className="hover:underline">Home</Link>
               <span>/</span>
               <span>Category</span>
+              <span>/</span>
+              <span className="font-semibold capitalize text-white">{categoryName}</span>
             </div>
-            <h1 className="font-serif text-3xl sm:text-5xl font-bold">{category.name}</h1>
-            <p className="text-xs sm:text-sm text-zinc-300 font-light">{category.description}</p>
+            <h1 className="font-serif text-3xl sm:text-5xl font-bold tracking-tight">{categoryName}</h1>
+            <p className="text-xs sm:text-sm text-zinc-300">{categoryDesc}</p>
             <span className="inline-block bg-[#9b1c31] text-white text-xs font-bold px-3 py-1 rounded-full">
               {products.length} Designs Available
             </span>
@@ -65,7 +96,7 @@ export default function CategoryPage() {
               >
                 <div className="relative aspect-[3/4] overflow-hidden bg-zinc-100">
                   <Link href={`/products/${product.slug}`}>
-                    <img src={product.images[0]?.url} alt={product.name} className="w-full h-full object-cover" />
+                    <Image src={product.images[0]?.url} alt={product.name} fill className="w-full h-full object-cover" />
                   </Link>
 
                   <button

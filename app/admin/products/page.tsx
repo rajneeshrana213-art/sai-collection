@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
-import { MOCK_PRODUCTS, CATEGORIES, Product, Category } from "@/lib/mock-data";
+import { Product, Category } from "@/lib/mock-data";
 import { Pagination } from "@/components/common/Pagination";
 import { useAdminTheme } from "@/context/AdminThemeContext";
 
-// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Types --------------------------------------------------------------------
 
 interface DraftVariant {
   id: string;
@@ -22,7 +22,7 @@ interface DraftImage {
   altText: string;
 }
 
-// â”€â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ————————————————————————————————————————————————————————————————————————————————
 
 const DEFAULT_SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL"];
 const BADGE_OPTIONS = ["", "NEW", "BEST SELLER", "SALE", "TRENDING"] as const;
@@ -33,60 +33,131 @@ function slugify(text: string): string {
 }
 
 function formatCurrency(paise: number) {
-  return `â‚¹${(paise / 100).toLocaleString("en-IN")}`;
+  return `₹${(paise / 100).toLocaleString("en-IN")}`;
 }
 
-// â”€â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ————————————————————————————————————————————————————————————————————————————————
+
+import { apiClient } from "@/lib/api-client";
 
 export default function AdminProductsPage() {
   const { theme } = useAdminTheme();
   const isLight = theme === "light";
 
   // List state
-  const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categoriesList, setCategoriesList] = useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Form — classification
+  const [newCategoryId, setNewCategoryId] = useState("");
+  const [newSubCategoryId, setNewSubCategoryId] = useState("");
+
+  useEffect(() => {
+    async function fetchAdminProducts() {
+      try {
+        const res = await apiClient.get<{ products: Product[] }>("/api/v1/admin/products");
+        if (res && Array.isArray(res.products)) {
+          setProducts(res.products);
+        } else if (Array.isArray(res)) {
+          setProducts(res as unknown as Product[]);
+        }
+      } catch (err) {
+        console.warn("Admin products API fetch error", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    async function fetchAdminCategories() {
+      try {
+        const res = await apiClient.get<{ categories: Category[] }>("/api/v1/categories");
+        if (res && Array.isArray(res.categories)) {
+          setCategoriesList(res.categories);
+          if (res.categories.length > 0) {
+            setNewCategoryId(res.categories[0].id);
+          }
+        }
+      } catch (err) {
+        console.warn("Admin categories API fetch error", err);
+      }
+    }
+    fetchAdminProducts();
+    fetchAdminCategories();
+  }, []);
+
+  // Toast State
+  const [toasts, setToasts] = useState<Array<{ id: string; type: "success" | "error" | "info"; message: string }>>([]);
+
+  const showToast = useCallback((message: string, type: "success" | "error" | "info" = "success") => {
+    setToasts((prev) => {
+      const id = `toast-${prev.length}-${message.slice(0, 5)}`;
+      setTimeout(() => {
+        setToasts((current) => current.filter((t) => t.id !== id));
+      }, 4000);
+      return [...prev, { id, type, message }];
+    });
+  }, []);
+
   // Stock modal
   const [selectedProductForStock, setSelectedProductForStock] = useState<Product | null>(null);
+
+  // Edit / Delete modal states
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
+  const [customImageUrl, setCustomImageUrl] = useState("");
 
   // Drawer
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  // Form â€” basic
+  // Form — basic
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newBadge, setNewBadge] = useState<BadgeOption>("");
   const [newCOD, setNewCOD] = useState(true);
 
-  // Form â€” pricing
+  // Form — pricing
   const [newPrice, setNewPrice] = useState("");
   const [newOriginalPrice, setNewOriginalPrice] = useState("");
 
-  // Form â€” classification
-  const [newCategoryId, setNewCategoryId] = useState(CATEGORIES[0].id);
-  const [newSubCategoryId, setNewSubCategoryId] = useState("");
 
-  // Form â€” material
+
+  // Form — material
   const [newFabric, setNewFabric] = useState("");
   const [newCraft, setNewCraft] = useState("");
 
-  // Form â€” images
+  // Form — images & video
   const [draftImages, setDraftImages] = useState<DraftImage[]>([]);
+  const [newVideoUrl, setNewVideoUrl] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Form â€” variants
+  const handleVideoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === "string") {
+        setNewVideoUrl(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Form — variants
   const [draftVariants, setDraftVariants] = useState<DraftVariant[]>([
     { id: "v-s", size: "S", color: "", stock: "10", price: "" },
     { id: "v-m", size: "M", color: "", stock: "10", price: "" },
     { id: "v-l", size: "L", color: "", stock: "10", price: "" },
   ]);
 
-  // Derived â€” subcategories from selected category
-  const selectedCategory = CATEGORIES.find((c) => c.id === newCategoryId) ?? CATEGORIES[0];
-  const subCategories: Category[] = selectedCategory.subCategories ?? [];
+  // Derived — subcategories from selected category
+  const selectedCategory = categoriesList.find((c) => c.id === newCategoryId) ?? categoriesList[0];
+  const subCategories: Category[] = selectedCategory?.subCategories ?? [];
 
   // Filtered + paginated products
   const filteredProducts = products.filter((p) => {
@@ -149,11 +220,14 @@ export default function AdminProductsPage() {
 
   // Reset + open drawer
   const resetForm = () => {
+    setEditingProduct(null);
     setNewTitle(""); setNewDescription(""); setNewBadge(""); setNewCOD(true);
     setNewPrice(""); setNewOriginalPrice("");
-    setNewCategoryId(CATEGORIES[0].id); setNewSubCategoryId("");
+    setNewCategoryId(categoriesList[0]?.id || ""); setNewSubCategoryId("");
     setNewFabric(""); setNewCraft("");
     setDraftImages([]);
+    setNewVideoUrl("");
+    setCustomImageUrl("");
     setDraftVariants([
       { id: "v-s", size: "S", color: "", stock: "10", price: "" },
       { id: "v-m", size: "M", color: "", stock: "10", price: "" },
@@ -162,59 +236,175 @@ export default function AdminProductsPage() {
   };
 
   const openDrawer = () => { resetForm(); setIsDrawerOpen(true); };
-  const closeDrawer = () => setIsDrawerOpen(false);
+  const closeDrawer = () => { setIsDrawerOpen(false); setEditingProduct(null); };
 
-  // Submit
-  const handleAddProduct = (e: React.FormEvent) => {
+  const openEditDrawer = (prod: Product) => {
+    setEditingProduct(prod);
+    setNewTitle(prod.name);
+    setNewDescription(prod.description || "");
+    setNewBadge((prod.badge as BadgeOption) || "");
+    setNewCOD(prod.isAvailableForCOD ?? true);
+    setNewPrice((prod.basePrice / 100).toString());
+    setNewOriginalPrice(prod.originalPrice ? (prod.originalPrice / 100).toString() : "");
+
+    const catObj = categoriesList.find((c) => c.slug === prod.categorySlug || c.name === prod.category);
+    if (catObj) {
+      setNewCategoryId(catObj.id);
+    }
+    setNewSubCategoryId(prod.subCategorySlug || "");
+    setNewFabric(prod.fabric || "");
+    setNewCraft(prod.craft || "");
+
+    const rawImages = (prod.images || []) as unknown as Array<{ url: string; type?: string }>;
+    const foundVideo = (prod as unknown as { videoUrl?: string }).videoUrl ||
+      rawImages.find((img) => img.type === "VIDEO")?.url || "";
+    setNewVideoUrl(foundVideo);
+
+    setDraftImages(
+      (prod.images || []).map((img) => ({
+        id: img.id || `img-${Math.random()}`,
+        url: img.url,
+        altText: img.altText || prod.name,
+      }))
+    );
+
+    setDraftVariants(
+      (prod.variants || []).map((v) => ({
+        id: v.id || `v-${Math.random()}`,
+        size: v.size,
+        color: v.color || "",
+        stock: (v.stock ?? 0).toString(),
+        price: v.price ? (v.price / 100).toString() : "",
+      }))
+    );
+
+    setIsDrawerOpen(true);
+  };
+
+  const addImageFromUrl = () => {
+    if (!customImageUrl || !customImageUrl.trim()) return;
+    const trimmed = customImageUrl.trim();
+    setDraftImages((prev) => [
+      ...prev,
+      { id: `url-${Date.now()}-${Math.random()}`, url: trimmed, altText: newTitle || "Product Image" },
+    ]);
+    setCustomImageUrl("");
+    showToast("Image URL added!", "success");
+  };
+
+  // Submit (Create or Update)
+  const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    const basePricePaise = Math.round(parseFloat(newPrice || "0") * 100);
-    const originalPricePaise = newOriginalPrice
-      ? Math.round(parseFloat(newOriginalPrice) * 100)
-      : undefined;
-    const subCat = subCategories.find((s) => s.id === newSubCategoryId);
-    const ts = crypto.randomUUID();
+    if (!newTitle || !newPrice) {
+      showToast("Please provide product title and price", "error");
+      return;
+    }
+    setIsSubmitting(true);
 
-    const newProd: Product = {
-      id: `prod-${ts}`,
-      name: newTitle,
-      slug: slugify(newTitle),
-      description: newDescription || `Handcrafted ${newTitle} from Panipat.`,
-      category: selectedCategory.name,
-      categorySlug: selectedCategory.slug,
-      subCategory: subCat?.name,
-      subCategorySlug: subCat?.slug,
-      basePrice: basePricePaise,
-      originalPrice: originalPricePaise,
-      badge: (newBadge as Product["badge"]) || undefined,
-      rating: 5.0,
-      reviewsCount: 0,
-      fabric: newFabric || undefined,
-      craft: newCraft || undefined,
-      isAvailableForCOD: newCOD,
-      images:
-        draftImages.length > 0
-          ? draftImages.map((img) => ({ id: img.id, url: img.url, altText: img.altText }))
-          : [
-              {
-                id: `img-default-${ts}`,
-                url: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=800",
-                altText: newTitle,
-              },
-            ],
-      variants: draftVariants
-        .filter((v) => v.size)
-        .map((v, i) => ({
-          id: `v-${ts}-${i}`,
-          size: v.size,
-          color: v.color || "Default",
-          sku: `SAI-${slugify(newTitle).toUpperCase().slice(0, 6)}-${v.size}-${ts}`,
-          price: v.price ? Math.round(parseFloat(v.price) * 100) : basePricePaise,
-          stock: parseInt(v.stock || "0", 10),
-        })),
-    };
+    try {
+      const basePricePaise = Math.round(parseFloat(newPrice || "0") * 100);
+      const originalPricePaise = newOriginalPrice
+        ? Math.round(parseFloat(newOriginalPrice) * 100)
+        : undefined;
+      const subCat = subCategories.find((s) => s.id === newSubCategoryId);
 
-    setProducts([newProd, ...products]);
-    closeDrawer();
+      const payload = {
+        name: newTitle,
+        slug: slugify(newTitle),
+        description: newDescription || `Handcrafted ${newTitle} from Panipat.`,
+        categoryId: newCategoryId || selectedCategory?.id,
+        subCategorySlug: subCat?.slug || newSubCategoryId || undefined,
+        basePrice: basePricePaise,
+        originalPrice: originalPricePaise,
+        badge: (newBadge as Product["badge"]) || undefined,
+        fabric: newFabric || undefined,
+        craft: newCraft || undefined,
+        isAvailableForCOD: newCOD,
+        videoUrl: newVideoUrl || undefined,
+        images:
+          draftImages.length > 0
+            ? draftImages.map((img) => ({ url: img.url, altText: img.altText }))
+            : [
+                {
+                  url: selectedCategory.slug === "tops-tunics"
+                    ? "https://images.unsplash.com/photo-1583391733975-ac9f78310c85?auto=format&fit=crop&q=80&w=800"
+                    : selectedCategory.slug === "dresses"
+                    ? "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&q=80&w=800"
+                    : selectedCategory.slug === "trending-cordsets"
+                    ? "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=800"
+                    : selectedCategory.slug === "partywear"
+                    ? "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&q=80&w=800"
+                    : selectedCategory.slug === "denim-wear"
+                    ? "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&q=80&w=800"
+                    : selectedCategory.slug === "bottom-wear"
+                    ? "https://images.unsplash.com/photo-1509551388413-e18d0ac5d495?auto=format&fit=crop&q=80&w=800"
+                    : selectedCategory.slug === "night-suits"
+                    ? "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?auto=format&fit=crop&q=80&w=800"
+                    : "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&q=80&w=800",
+                  altText: newTitle,
+                },
+              ],
+        variants: draftVariants
+          .filter((v) => v.size)
+          .map((v) => ({
+            size: v.size,
+            color: v.color || "Default",
+            sku: `SAI-${slugify(newTitle).toUpperCase().slice(0, 6)}-${v.size}-${Math.floor(Math.random() * 1000)}`,
+            price: v.price ? Math.round(parseFloat(v.price) * 100) : basePricePaise,
+            stock: parseInt(v.stock || "0", 10),
+          })),
+      };
+
+      if (editingProduct) {
+        // UPDATE
+        const res = await apiClient.put<{ product: Product }>(`/api/v1/products/${editingProduct.id}`, payload);
+        const updatedProduct = res?.product || { ...editingProduct, ...payload };
+
+        setProducts((prev) => prev.map((p) => (p.id === editingProduct.id ? (updatedProduct as Product) : p)));
+        showToast(`Product "${newTitle}" updated successfully!`, "success");
+      } else {
+        // CREATE
+        const res = await apiClient.post<{ product: Product }>("/api/v1/admin/products", payload);
+        const createdProduct = res?.product || res || {
+          ...payload,
+          id: `prod-${payload.slug}`,
+          category: selectedCategory?.name || "Ethnic Wear",
+          categorySlug: selectedCategory?.slug || "ethnic-wear",
+          rating: 5.0,
+          reviewsCount: 0,
+          images: payload.images.map((img, idx) => ({ id: `img-${idx}`, ...img })),
+          variants: payload.variants.map((v, idx) => ({ id: `v-${idx}`, ...v })),
+        };
+
+        setProducts([createdProduct as Product, ...products]);
+        showToast(`Product "${newTitle}" created successfully!`, "success");
+      }
+
+      closeDrawer();
+    } catch (err) {
+      console.error("Save product error", err);
+      showToast(editingProduct ? "Failed to update product" : "Failed to create product", "error");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteProduct = async () => {
+    if (!deletingProduct) return;
+    setIsSubmitting(true);
+
+    try {
+      await apiClient.delete(`/api/v1/products/${deletingProduct.id}`);
+
+      setProducts((prev) => prev.filter((p) => p.id !== deletingProduct.id));
+      showToast(`Product "${deletingProduct.name}" deleted successfully!`, "info");
+      setDeletingProduct(null);
+    } catch (err) {
+      console.error("Delete product error", err);
+      showToast("Failed to delete product", "error");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Stock modal
@@ -226,6 +416,7 @@ export default function AdminProductsPage() {
     const updatedProd = { ...selectedProductForStock, variants: updatedVariants };
     setProducts(products.map((p) => (p.id === updatedProd.id ? updatedProd : p)));
     setSelectedProductForStock(updatedProd);
+    showToast("Stock updated", "success");
   };
 
   // Theme helpers
@@ -275,7 +466,7 @@ export default function AdminProductsPage() {
           </svg>
           <input
             type="text"
-            placeholder="Search by name or categoryâ€¦"
+            placeholder="Search by name or category..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className={`w-full rounded-xl pl-9 pr-3 py-2 text-xs focus:outline-none ${bgInput}`}
@@ -289,7 +480,7 @@ export default function AdminProductsPage() {
             className={`rounded-xl px-3 py-2 text-xs focus:outline-none ${bgInput}`}
           >
             <option value="ALL">All Categories</option>
-            {CATEGORIES.map((c) => (
+            {categoriesList.map((c) => (
               <option key={c.id} value={c.slug}>{c.name}</option>
             ))}
           </select>
@@ -311,7 +502,16 @@ export default function AdminProductsPage() {
               </tr>
             </thead>
             <tbody className={`divide-y ${isLight ? "divide-zinc-100 text-zinc-700" : "divide-zinc-800 text-zinc-300"}`}>
-              {paginatedProducts.length === 0 ? (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} className={`p-12 text-center text-xs font-semibold ${textSub}`}>
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="animate-spin text-base">⏳</span>
+                      <span>Loading products catalog from database...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : paginatedProducts.length === 0 ? (
                 <tr>
                   <td colSpan={6} className={`p-10 text-center ${textSub}`}>
                     No products found. Try adjusting filters.
@@ -349,7 +549,7 @@ export default function AdminProductsPage() {
                               </span>
                             )}
                             <p className={`text-[10px] font-mono mt-0.5 ${textSub}`}>
-                              Fabric: {prod.fabric ?? "â€”"}
+                              Fabric: {prod.fabric ?? "—"}
                             </p>
                           </div>
                         </div>
@@ -375,27 +575,48 @@ export default function AdminProductsPage() {
                           {totalStock} in stock
                         </span>
                         <p className={`text-[10px] ${textSub} mt-0.5`}>
-                          {prod.variants.map((v) => v.size).join(" Â· ")}
+                          {prod.variants.map((v) => v.size).join(" · ")}
                         </p>
                       </td>
                       <td className="p-4">
                         {prod.isAvailableForCOD ? (
-                          <span className="text-emerald-600 font-bold text-[10px] block">âœ“ COD Active</span>
+                          <span className="text-emerald-600 font-bold text-[10px] block">✓ COD Active</span>
                         ) : (
                           <span className={`font-bold text-[10px] block ${textSub}`}>Prepaid Only</span>
                         )}
                       </td>
                       <td className="p-4 text-right">
-                        <button
-                          onClick={() => setSelectedProductForStock(prod)}
-                          className={`font-bold px-3 py-1.5 rounded-lg border transition-colors text-[10px] ${
-                            isLight
-                              ? "bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300"
-                              : "bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40"
-                          }`}
-                        >
-                          Edit Stock
-                        </button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => setSelectedProductForStock(prod)}
+                            className={`font-bold px-2.5 py-1.5 rounded-lg border transition-colors text-[10px] ${
+                              isLight
+                                ? "bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300"
+                                : "bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40"
+                            }`}
+                            title="Edit Stock Levels"
+                          >
+                            Stock
+                          </button>
+
+                          <button
+                            onClick={() => openEditDrawer(prod)}
+                            className="p-1.5 px-2.5 rounded-lg bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 font-bold text-[10px] flex items-center gap-1 transition-colors"
+                            title="Edit Product Details"
+                          >
+                            <span>✏️</span>
+                            <span className="hidden sm:inline">Edit</span>
+                          </button>
+
+                          <button
+                            onClick={() => setDeletingProduct(prod)}
+                            className="p-1.5 px-2.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 font-bold text-[10px] flex items-center gap-1 transition-colors"
+                            title="Delete Product"
+                          >
+                            <span>🗑️</span>
+                            <span className="hidden sm:inline">Delete</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -421,33 +642,52 @@ export default function AdminProductsPage() {
           <div className={`${modalBg} border rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl`}>
             <div className={`flex justify-between items-center pb-3 border-b ${divider}`}>
               <h3 className="font-serif text-lg font-bold">Edit Variant Stock Levels</h3>
-              <button onClick={() => setSelectedProductForStock(null)} className="font-bold opacity-60 hover:opacity-100">âœ•</button>
+              <button onClick={() => setSelectedProductForStock(null)} className="font-bold opacity-60 hover:opacity-100">✕</button>
             </div>
             <p className={`text-xs ${textSub}`}>
               Adjusting stock for <strong>{selectedProductForStock.name}</strong>:
             </p>
-            <div className="space-y-2">
-              {selectedProductForStock.variants.map((v) => (
-                <div key={v.id} className={`flex items-center justify-between p-3 rounded-xl border ${isLight ? "bg-zinc-50 border-zinc-200" : "bg-zinc-950 border-zinc-800"}`}>
-                  <div>
-                    <strong className="block font-bold text-xs">
-                      Size: {v.size}{v.color ? ` Â· ${v.color}` : ""}
-                    </strong>
-                    <span className={`text-[10px] font-mono ${textSub}`}>SKU: {v.sku}</span>
+            <div className="space-y-2.5 max-h-[60vh] overflow-y-auto pr-1">
+              {selectedProductForStock.variants.map((v) => {
+                const displayColor = v.color && v.color !== "Default" && v.color.length <= 12 && !v.color.includes(" ") ? ` · ${v.color}` : "";
+                return (
+                  <div key={v.id} className={`flex items-center justify-between p-3.5 rounded-xl border ${isLight ? "bg-zinc-50 border-zinc-200" : "bg-zinc-950 border-zinc-800"}`}>
+                    <div>
+                      <strong className={`block font-bold text-xs ${textTitle}`}>
+                        Size: {v.size}{displayColor}
+                      </strong>
+                      <span className={`text-[10px] font-mono block mt-0.5 ${textSub}`}>SKU: {v.sku}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => handleStockUpdate(v.id, -1)}
+                        className={`w-8 h-8 rounded-lg font-extrabold text-base flex items-center justify-center transition-all ${
+                          isLight
+                            ? "bg-zinc-200 hover:bg-red-500 text-zinc-800 hover:text-white"
+                            : "bg-zinc-800 hover:bg-red-600 text-zinc-100 hover:text-white"
+                        }`}
+                        title="Decrease Stock"
+                      >
+                        -
+                      </button>
+                      <span className="font-mono font-bold text-sm min-w-[28px] text-center">{v.stock}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleStockUpdate(v.id, 1)}
+                        className={`w-8 h-8 rounded-lg font-extrabold text-base flex items-center justify-center transition-all ${
+                          isLight
+                            ? "bg-zinc-200 hover:bg-emerald-600 text-zinc-800 hover:text-white"
+                            : "bg-zinc-800 hover:bg-emerald-600 text-zinc-100 hover:text-white"
+                        }`}
+                        title="Increase Stock"
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => handleStockUpdate(v.id, -1)}
-                      className="w-7 h-7 rounded-lg bg-zinc-200 dark:bg-zinc-800 font-bold hover:bg-red-500 hover:text-white transition-colors"
-                    >âˆ’</button>
-                    <span className="font-mono font-bold text-sm w-6 text-center">{v.stock}</span>
-                    <button
-                      onClick={() => handleStockUpdate(v.id, 1)}
-                      className="w-7 h-7 rounded-lg bg-zinc-200 dark:bg-zinc-800 font-bold hover:bg-emerald-500 hover:text-white transition-colors"
-                    >+</button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <button
               onClick={() => setSelectedProductForStock(null)}
@@ -459,21 +699,25 @@ export default function AdminProductsPage() {
         </div>
       )}
 
-      {/* Create Product Drawer â€” Backdrop */}
+      {/* Create Product Drawer — Backdrop */}
       <div
         className={`fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isDrawerOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
         onClick={closeDrawer}
       />
 
-      {/* Create Product Drawer â€” Panel */}
+      {/* Create Product Drawer — Panel */}
       <div
         className={`fixed top-0 right-0 z-50 h-full w-full max-w-2xl ${drawerBg} shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${isDrawerOpen ? "translate-x-0" : "translate-x-full"}`}
       >
         {/* Drawer Header */}
         <div className={`flex items-center justify-between px-6 py-5 border-b ${divider} flex-shrink-0`}>
           <div>
-            <h2 className={`font-serif text-xl font-bold ${textTitle}`}>Create New Product</h2>
-            <p className={`text-xs ${textSub} mt-0.5`}>Complete all sections to add to the catalog.</p>
+            <h2 className={`font-serif text-xl font-bold ${textTitle}`}>
+              {editingProduct ? "Edit Product" : "Create New Product"}
+            </h2>
+            <p className={`text-xs ${textSub} mt-0.5`}>
+              {editingProduct ? "Update product attributes and catalog settings." : "Complete all sections to add to the catalog."}
+            </p>
           </div>
           <button
             type="button"
@@ -487,10 +731,10 @@ export default function AdminProductsPage() {
         </div>
 
         {/* Drawer Scrollable Body */}
-        <form id="form-create-product" onSubmit={handleAddProduct} className="flex-1 overflow-y-auto">
+        <form id="form-create-product" onSubmit={handleSaveProduct} className="flex-1 overflow-y-auto">
           <div className="px-6 py-5 space-y-8">
 
-            {/* â”€â”€ Images â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+            {/* -- Images ------------------------------------------ */}
             <section>
               <h3 className={`text-xs uppercase tracking-wider font-bold mb-3 pb-2 border-b ${divider} ${sectionColor}`}>
                 Product Images
@@ -509,7 +753,7 @@ export default function AdminProductsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 <p className="text-xs font-medium">Click or drag &amp; drop images here</p>
-                <p className="text-[10px] opacity-60">PNG, JPG, WEBP â€” multiple allowed</p>
+                <p className="text-[10px] opacity-60">PNG, JPG, WEBP — multiple allowed</p>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -518,6 +762,35 @@ export default function AdminProductsPage() {
                   className="hidden"
                   onChange={(e) => handleImageFiles(e.target.files)}
                 />
+              </div>
+
+              {/* Image URL Input Option */}
+              <div className="mt-3 space-y-2">
+                <label className="text-[11px] font-bold block text-zinc-500 dark:text-zinc-400">
+                  OR Add Image via URL:
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Paste image URL (e.g. https://images.unsplash.com/...)"
+                    value={customImageUrl}
+                    onChange={(e) => setCustomImageUrl(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addImageFromUrl();
+                      }
+                    }}
+                    className={`flex-1 rounded-xl p-2.5 text-xs ${bgInput}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={addImageFromUrl}
+                    className="bg-[#9b1c31] hover:bg-[#801728] text-white font-bold px-4 py-2.5 rounded-xl text-xs shrink-0 transition-colors"
+                  >
+                    + Add URL
+                  </button>
+                </div>
               </div>
               {draftImages.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -537,7 +810,7 @@ export default function AdminProductsPage() {
                         onClick={() => removeImage(img.id)}
                         className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        âœ•
+                        ✕
                       </button>
                     </div>
                   ))}
@@ -545,7 +818,46 @@ export default function AdminProductsPage() {
               )}
             </section>
 
-            {/* â”€â”€ Basic Info â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+            {/* -- Product Video ------------------------------------ */}
+            <section className="space-y-2">
+              <div className={`flex items-center justify-between pb-1 border-b ${divider}`}>
+                <h3 className={`text-xs uppercase tracking-wider font-bold ${sectionColor}`}>
+                  🎥 Product Showcase Video (MP4 / WebM)
+                </h3>
+                <label className="text-[10px] font-bold text-amber-600 dark:text-amber-400 hover:underline cursor-pointer">
+                  📁 Upload Video File
+                  <input
+                    type="file"
+                    accept="video/*"
+                    className="hidden"
+                    onChange={handleVideoFileUpload}
+                  />
+                </label>
+              </div>
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  placeholder="Paste video URL (e.g. https://domain.com/video.mp4 or data URL)"
+                  value={newVideoUrl}
+                  onChange={(e) => setNewVideoUrl(e.target.value)}
+                  className={`w-full rounded-xl px-3 py-2 text-xs font-mono ${bgInput}`}
+                />
+                {newVideoUrl && (
+                  <div className="relative rounded-xl overflow-hidden bg-black border border-zinc-700 max-h-40 flex items-center justify-center p-2">
+                    <video controls src={newVideoUrl} className="max-h-36 w-full object-contain" />
+                    <button
+                      type="button"
+                      onClick={() => setNewVideoUrl("")}
+                      className="absolute top-2 right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow hover:bg-red-700"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* -- Basic Info -------------------------------------- */}
             <section>
               <h3 className={`text-xs uppercase tracking-wider font-bold mb-3 pb-2 border-b ${divider} ${sectionColor}`}>
                 Basic Information
@@ -570,7 +882,7 @@ export default function AdminProductsPage() {
                   <textarea
                     id="field-product-description"
                     rows={3}
-                    placeholder="Describe fabric, design details, occasions it suitsâ€¦"
+                    placeholder="Describe fabric, design details, occasions it suits..."
                     value={newDescription}
                     onChange={(e) => setNewDescription(e.target.value)}
                     className={`w-full rounded-xl px-3 py-2.5 text-xs focus:outline-none resize-none ${bgInput}`}
@@ -600,7 +912,7 @@ export default function AdminProductsPage() {
               </div>
             </section>
 
-            {/* â”€â”€ Pricing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+            {/* -- Pricing ----------------------------------------- */}
             <section>
               <h3 className={`text-xs uppercase tracking-wider font-bold mb-3 pb-2 border-b ${divider} ${sectionColor}`}>
                 Pricing
@@ -608,10 +920,10 @@ export default function AdminProductsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className={`block text-xs font-semibold mb-1 ${textTitle}`}>
-                    Selling Price (â‚¹) <span className="text-red-500">*</span>
+                    Selling Price (₹) <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold ${textSub}`}>â‚¹</span>
+                    <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold ${textSub}`}>₹</span>
                     <input
                       id="field-product-price"
                       type="number"
@@ -627,10 +939,10 @@ export default function AdminProductsPage() {
                 </div>
                 <div>
                   <label className={`block text-xs font-semibold mb-1 ${textTitle}`}>
-                    MRP / Original Price (â‚¹)
+                    MRP / Original Price (₹)
                   </label>
                   <div className="relative">
-                    <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold ${textSub}`}>â‚¹</span>
+                    <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold ${textSub}`}>₹</span>
                     <input
                       id="field-product-mrp"
                       type="number"
@@ -659,7 +971,7 @@ export default function AdminProductsPage() {
               </div>
             </section>
 
-            {/* â”€â”€ Classification â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+            {/* -- Classification ---------------------------------- */}
             <section>
               <h3 className={`text-xs uppercase tracking-wider font-bold mb-3 pb-2 border-b ${divider} ${sectionColor}`}>
                 Classification
@@ -678,7 +990,7 @@ export default function AdminProductsPage() {
                     }}
                     className={`w-full rounded-xl px-3 py-2.5 text-xs focus:outline-none ${bgInput}`}
                   >
-                    {CATEGORIES.map((c) => (
+                    {categoriesList.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                   </select>
@@ -697,7 +1009,7 @@ export default function AdminProductsPage() {
                     disabled={subCategories.length === 0}
                     className={`w-full rounded-xl px-3 py-2.5 text-xs focus:outline-none disabled:opacity-40 ${bgInput}`}
                   >
-                    <option value="">â€” Select subcategory â€”</option>
+                    <option value="">— Select subcategory —</option>
                     {subCategories.map((s) => (
                       <option key={s.id} value={s.id}>{s.name}</option>
                     ))}
@@ -706,7 +1018,7 @@ export default function AdminProductsPage() {
               </div>
             </section>
 
-            {/* â”€â”€ Material & Craft â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+            {/* -- Material & Craft -------------------------------- */}
             <section>
               <h3 className={`text-xs uppercase tracking-wider font-bold mb-3 pb-2 border-b ${divider} ${sectionColor}`}>
                 Material &amp; Craft
@@ -737,7 +1049,7 @@ export default function AdminProductsPage() {
               </div>
             </section>
 
-            {/* â”€â”€ Size Variants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+            {/* -- Size Variants ----------------------------------- */}
             <section>
               <div className={`flex items-center justify-between pb-2 border-b ${divider} mb-3`}>
                 <h3 className={`text-xs uppercase tracking-wider font-bold ${sectionColor}`}>
@@ -796,7 +1108,7 @@ export default function AdminProductsPage() {
                     <span>Size</span>
                     <span>Color</span>
                     <span>Stock</span>
-                    <span>Price (â‚¹)</span>
+                    <span>Price (₹)</span>
                     <span />
                   </div>
                   {draftVariants.map((v) => (
@@ -841,7 +1153,7 @@ export default function AdminProductsPage() {
                         onClick={() => removeVariant(v.id)}
                         className="w-7 h-7 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center font-bold text-xs"
                       >
-                        âœ•
+                        ✕
                       </button>
                     </div>
                   ))}
@@ -867,11 +1179,78 @@ export default function AdminProductsPage() {
           <button
             type="submit"
             form="form-create-product"
-            className="flex-[2] bg-[#9b1c31] hover:bg-[#b5223c] active:scale-[0.98] text-white font-bold py-3 rounded-xl shadow-md transition-all text-sm"
+            disabled={isSubmitting}
+            className="flex-[2] bg-[#9b1c31] hover:bg-[#b5223c] disabled:opacity-50 active:scale-[0.98] text-white font-bold py-3 rounded-xl shadow-md transition-all text-sm flex items-center justify-center gap-2"
           >
-            Save Product to Catalog
+            {isSubmitting ? (
+              <>
+                <span className="animate-spin text-base">⏳</span>
+                <span>Saving Product...</span>
+              </>
+            ) : (
+              "Save Product to Catalog"
+            )}
           </button>
         </div>
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      {deletingProduct && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className={`${modalBg} border rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl text-center`}>
+            <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center text-2xl mx-auto font-bold">
+              ⚠️
+            </div>
+            <h3 className="font-serif text-lg font-bold">Delete Product?</h3>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              Are you sure you want to delete <strong className="text-zinc-900 dark:text-white">&quot;{deletingProduct.name}&quot;</strong>? This action will remove it from the store catalog.
+            </p>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeletingProduct(null)}
+                className="flex-1 bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-bold py-2.5 rounded-xl text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteProduct}
+                disabled={isSubmitting}
+                className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <span className="animate-spin">⏳</span>
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  "Confirm Delete"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Toast Banner — Top Center */}
+      <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-none items-center">
+        {toasts.map((t) => (
+          <div
+            key={t.id}
+            className={`pointer-events-auto px-4 py-3 rounded-xl shadow-2xl text-xs font-bold flex items-center gap-2.5 border transition-all animate-bounce-short ${
+              t.type === "success"
+                ? "bg-emerald-900 text-emerald-100 border-emerald-700"
+                : t.type === "error"
+                ? "bg-red-900 text-red-100 border-red-700"
+                : "bg-zinc-900 text-amber-200 border-zinc-700"
+            }`}
+          >
+            <span>{t.type === "success" ? "✅" : t.type === "error" ? "❌" : "ℹ️"}</span>
+            <span>{t.message}</span>
+          </div>
+        ))}
       </div>
 
     </div>

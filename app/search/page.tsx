@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Header } from "@/components/storefront/Header";
@@ -8,8 +8,10 @@ import { Footer } from "@/components/storefront/Footer";
 import { CartDrawer } from "@/components/storefront/CartDrawer";
 import { QuickSearchModal } from "@/components/storefront/QuickSearchModal";
 import { Pagination } from "@/components/common/Pagination";
-import { MOCK_PRODUCTS } from "@/lib/mock-data";
+import { Product } from "@/lib/mock-data";
 import { useCart } from "@/context/CartContext";
+import { apiClient } from "@/lib/api-client";
+import Image from "next/image";
 
 function SearchContent() {
   const searchParams = useSearchParams();
@@ -17,20 +19,38 @@ function SearchContent() {
 
   const [query, setQuery] = useState(initialQuery);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchResults, setSearchResults] = useState<Product[]>([]);
   const itemsPerPage = 6;
 
   const { addToCart, toggleWishlist, isWishlisted } = useCart();
   const formatCurrency = (paise: number) => `₹${(paise / 100).toLocaleString("en-IN")}`;
 
-  const results = query.trim() === ""
-    ? MOCK_PRODUCTS
-    : MOCK_PRODUCTS.filter(
-      (p) =>
-        p.name.toLowerCase().includes(query.toLowerCase()) ||
-        p.category.toLowerCase().includes(query.toLowerCase()) ||
-        p.description.toLowerCase().includes(query.toLowerCase())
-    );
+  useEffect(() => {
+    async function performSearch() {
+      if (!query.trim()) {
+        setSearchResults([]);
+        return;
+      }
+      try {
+        const res = await apiClient.get<{ products: Product[] }>(
+          `/api/v1/search?q=${encodeURIComponent(query)}`
+        );
+        if (res && Array.isArray(res.products)) {
+          setSearchResults(res.products);
+        } else if (Array.isArray(res)) {
+          setSearchResults(res as unknown as Product[]);
+        } else {
+          setSearchResults([]);
+        }
+      } catch (err) {
+        console.warn("Search API fetch error", err);
+        setSearchResults([]);
+      }
+    }
+    performSearch();
+  }, [query]);
 
+  const results = searchResults;
   const paginatedResults = results.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
@@ -84,7 +104,7 @@ function SearchContent() {
                 >
                   <div className="relative aspect-[3/4] overflow-hidden bg-zinc-100">
                     <Link href={`/products/${product.slug}`}>
-                      <img src={product.images[0]?.url} alt={product.name} className="w-full h-full object-cover" />
+                      <Image src={product.images[0]?.url} alt={product.name} fill className="w-full h-full object-cover" />
                     </Link>
 
                     <button

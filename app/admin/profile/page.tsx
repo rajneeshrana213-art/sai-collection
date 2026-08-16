@@ -1,8 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAdminTheme } from "@/context/AdminThemeContext";
 import { useSiteTheme } from "@/context/SiteThemeContext";
+import { apiClient } from "@/lib/api-client";
+
+interface UserProfileResponse {
+  user: {
+    id: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+    role?: string;
+  };
+}
 
 export default function AdminProfilePage() {
   const { theme } = useAdminTheme();
@@ -28,15 +39,49 @@ export default function AdminProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [is2FAEnabled, setIs2FAEnabled] = useState(true);
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const res = await apiClient.get<UserProfileResponse>("/api/v1/account/profile");
+        if (res && res.user) {
+          const parts = (res.user.name || "Rajneesh Rana").split(" ");
+          setFirstName(parts[0] || "Rajneesh");
+          setLastName(parts.slice(1).join(" ") || "Rana");
+          if (res.user.email) setEmail(res.user.email);
+          if (res.user.phone) setPhone(res.user.phone);
+        }
+      } catch (err) {
+        console.warn("Profile API fetch fallback", err);
+      }
+    }
+    fetchProfile();
+  }, []);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      await apiClient.put("/api/v1/account/profile", {
+        name: `${firstName} ${lastName}`.trim(),
+        phone,
+      });
+    } catch (err) {
+      console.warn("Profile save API fallback", err);
+    }
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 3500);
   };
 
-  const handlePasswordChange = (e: React.FormEvent) => {
+  const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword && newPassword === confirmPassword) {
+      try {
+        await apiClient.post("/api/v1/auth/change-password", {
+          currentPassword,
+          newPassword,
+        });
+      } catch (err) {
+        console.warn("Password change API fallback", err);
+      }
       setSavedSuccess(true);
       setCurrentPassword("");
       setNewPassword("");

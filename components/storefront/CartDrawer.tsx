@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
+import Image from "next/image";
 
 export const CartDrawer: React.FC = () => {
   const {
@@ -127,9 +128,11 @@ export const CartDrawer: React.FC = () => {
                   key={item.id}
                   className="flex gap-4 p-3 bg-white rounded-xl border border-zinc-200 shadow-sm relative group"
                 >
-                  <img
+                  <Image
                     src={item.product.images[0]?.url}
                     alt={item.product.name}
+                    width={80}
+                    height={96}
                     className="w-20 h-24 object-cover rounded-lg bg-zinc-100 shrink-0"
                   />
 

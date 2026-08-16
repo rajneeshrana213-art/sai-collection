@@ -3,6 +3,7 @@ import { Playfair_Display, Inter, Great_Vibes } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
 import { SiteThemeProvider } from "@/context/SiteThemeContext";
+import { AuthProvider } from "@/context/AuthContext";
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -53,9 +54,11 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <SiteThemeProvider>
-          <CartProvider>
-            {children}
-          </CartProvider>
+          <AuthProvider>
+            <CartProvider>
+              {children}
+            </CartProvider>
+          </AuthProvider>
         </SiteThemeProvider>
       </body>
     </html>
