@@ -17,17 +17,22 @@ const AdminThemeContext = createContext<AdminThemeContextType>({
 });
 
 export const AdminThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setThemeState] = useState<ThemeMode>("dark");
+  const [theme, setThemeState] = useState<ThemeMode>("light");
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("sai_admin_theme") as ThemeMode;
     if (savedTheme === "light" || savedTheme === "dark") {
-      const timer = setTimeout(() => {
-        setThemeState(savedTheme);
-      }, 0);
-      return () => clearTimeout(timer);
+      setThemeState(savedTheme);
     }
   }, []);
+
+  useEffect(() => {
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [theme]);
 
   const setTheme = (newTheme: ThemeMode) => {
     setThemeState(newTheme);

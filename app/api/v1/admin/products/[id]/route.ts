@@ -84,13 +84,41 @@ export async function DELETE(_req: Request, context: { params: Promise<{ id: str
 
     const { id } = await context.params;
 
-    // Soft delete by setting isActive to false
-    await prisma.product.update({
+    const product = await prisma.product.findUnique({
       where: { id },
-      data: { isActive: false },
+      include: { variants: true },
     });
 
-    return NextResponse.json({ success: true, message: "Product deactivated" });
+    if (!product) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
+    const variantIds = product.variants.map((v) => v.id);
+
+    // 1. Clear cart and wishlist references
+    await prisma.cartItem.deleteMany({
+      where: {
+        OR: [{ productId: id }, { variantId: { in: variantIds } }],
+      },
+    });
+    await prisma.wishlistItem.deleteMany({ where: { productId: id } });
+
+    // 2. Clear reviews, media, and order items referencing product or variants
+    await prisma.productReview.deleteMany({ where: { productId: id } });
+    await prisma.productMedia.deleteMany({ where: { productId: id } });
+    await prisma.orderItem.deleteMany({
+      where: {
+        OR: [{ productId: id }, { variantId: { in: variantIds } }],
+      },
+    });
+
+    // 3. Clear product variants
+    await prisma.productVariant.deleteMany({ where: { productId: id } });
+
+    // 4. Delete product row
+    await prisma.product.delete({ where: { id } });
+
+    return NextResponse.json({ success: true, message: "Product deleted successfully" });
   } catch (err: unknown) {
     return NextResponse.json({ error: (err as Error).message || "Product deletion failed" }, { status: 400 });
   }

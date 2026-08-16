@@ -275,13 +275,29 @@ export async function DELETE(_req: NextRequest, context: { params: Promise<{ slu
     }
 
     const id = product.id;
-    await prisma.cartItem.deleteMany({ where: { productId: id } });
-    await prisma.wishlistItem.deleteMany({ where: { productId: id } });
-    await prisma.productReview.deleteMany({ where: { productId: id } });
-    await prisma.productVariant.deleteMany({ where: { productId: id } });
-    await prisma.productMedia.deleteMany({ where: { productId: id } });
-    await prisma.orderItem.deleteMany({ where: { productId: id } });
+    const variantIds = product.variants.map((v) => v.id);
 
+    // 1. Clear cart and wishlist references
+    await prisma.cartItem.deleteMany({
+      where: {
+        OR: [{ productId: id }, { variantId: { in: variantIds } }],
+      },
+    });
+    await prisma.wishlistItem.deleteMany({ where: { productId: id } });
+
+    // 2. Clear reviews, media, and order items referencing product or variants
+    await prisma.productReview.deleteMany({ where: { productId: id } });
+    await prisma.productMedia.deleteMany({ where: { productId: id } });
+    await prisma.orderItem.deleteMany({
+      where: {
+        OR: [{ productId: id }, { variantId: { in: variantIds } }],
+      },
+    });
+
+    // 3. Clear product variants
+    await prisma.productVariant.deleteMany({ where: { productId: id } });
+
+    // 4. Finally delete product row
     await prisma.product.delete({ where: { id } });
 
     return NextResponse.json({ success: true, message: "Product deleted successfully" });

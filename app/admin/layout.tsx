@@ -8,9 +8,12 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { AdminMobileNav } from "@/components/admin/AdminMobileNav";
 
+import { useAdminTheme } from "@/context/AdminThemeContext";
+
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { theme } = useAdminTheme();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
@@ -20,8 +23,12 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
     router.push("/login");
   };
 
+  const isDark = theme === "dark";
+
   return (
-    <div className="h-screen overflow-hidden flex font-sans bg-slate-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-300">
+    <div className={`h-screen overflow-hidden flex font-sans transition-colors duration-300 ${
+      isDark ? "dark bg-zinc-950 text-zinc-100" : "bg-slate-100 text-zinc-900"
+    }`}>
 
       {/* Admin Sidebar Navigation */}
       <AdminSidebar onLogout={handleAdminLogout} />
