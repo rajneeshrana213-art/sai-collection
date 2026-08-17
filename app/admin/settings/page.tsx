@@ -860,18 +860,35 @@ export default function AdminSettingsPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
                       {/* Thumbnail Preview */}
-                      <div className="md:col-span-3 space-y-2">
-                        <span className={`text-[11px] font-bold block ${textTitle}`}>Banner Preview</span>
-                        <div className="relative aspect-[16/6] rounded-xl overflow-hidden bg-zinc-200 border border-zinc-300 shadow-sm">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={slide.desktopImageUrl || "/cover-page.png"}
-                            alt={slide.title || "Banner Preview"}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.currentTarget as HTMLImageElement).src = "/cover-page.png";
-                            }}
-                          />
+                      <div className="md:col-span-3 space-y-3">
+                        <div>
+                          <span className={`text-[11px] font-bold block ${textTitle} mb-1`}>🖥️ Desktop Preview (16:5)</span>
+                          <div className="relative aspect-[16/5] rounded-xl overflow-hidden bg-zinc-200 border border-zinc-300 shadow-sm">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={slide.desktopImageUrl || "/cover-page.png"}
+                              alt={slide.title || "Desktop Banner Preview"}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).src = "/cover-page.png";
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <span className={`text-[11px] font-bold block ${textTitle} mb-1`}>📱 Mobile Preview (1:1 Square)</span>
+                          <div className="relative aspect-square w-24 rounded-xl overflow-hidden bg-zinc-200 border border-zinc-300 shadow-sm">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={slide.mobileImageUrl || slide.desktopImageUrl || "/cover-page.png"}
+                              alt={slide.title || "Mobile Banner Preview"}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).src = "/cover-page.png";
+                              }}
+                            />
+                          </div>
                         </div>
                       </div>
 

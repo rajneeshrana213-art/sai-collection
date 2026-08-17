@@ -70,7 +70,7 @@ export const HeroBanner: React.FC = () => {
     <section className="w-full flex flex-col font-sans">
       {/* 1. Clickable Image-First Hero Slider */}
       <div className="relative w-full overflow-hidden bg-zinc-950">
-        <div className="relative w-full aspect-[16/6] sm:aspect-[16/5] min-h-[220px] max-h-[640px]">
+        <div className="relative w-full aspect-square sm:aspect-[16/5] min-h-[300px] sm:min-h-[380px] max-h-[640px]">
           {slides.map((slide, idx) => {
             const isActive = idx === activeSlideIndex;
             const desktopImg = slide.desktopImageUrl || "/cover-page.png";
@@ -92,6 +92,7 @@ export const HeroBanner: React.FC = () => {
                       alt={slide.title || "Sai Collection Banner"}
                       fill
                       priority={idx === 0}
+                      sizes="(max-width: 640px) 100vw, 100vw"
                       className="object-cover object-center group-hover:scale-[1.01] transition-transform duration-500"
                     />
                   </div>
@@ -103,6 +104,7 @@ export const HeroBanner: React.FC = () => {
                       alt={slide.title || "Sai Collection Banner"}
                       fill
                       priority={idx === 0}
+                      sizes="(max-width: 640px) 100vw, 100vw"
                       className="object-cover object-center"
                     />
                   </div>
