@@ -28,6 +28,17 @@ export const metadata: Metadata = {
   title: "Sai Collection — Panipat Ethnic Wear & Designer Suits",
   description: "Shop handcrafted Anarkali suit sets, designer kurtas, Chanderi sarees & Phulkari dupattas direct from Panipat, Haryana. Cash on Delivery & Free Shipping Available.",
   keywords: "Sai Collection, Panipat ethnic wear, Anarkali suits, designer kurtas, Indian fashion D2C, saicollectionpnp, festive wear, COD ethnic wear",
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+  manifest: "/site.webmanifest",
   openGraph: {
     title: "Sai Collection — Panipat Handcrafted Indian Ethnic Wear",
     description: "Premium handcrafted suit sets & ethnic fashion delivered to your doorstep. Direct from Panipat.",
