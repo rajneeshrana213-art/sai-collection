@@ -26,7 +26,7 @@ const greatVibes = Great_Vibes({
 
 export const metadata: Metadata = {
   title: "Sai Collection — Panipat Ethnic Wear & Designer Suits",
-  description: "Shop handcrafted Anarkali suit sets, designer kurtas, Chanderi sarees & Phulkari dupattas direct from Panipat, Haryana. Cash on Delivery & Free Shipping Available.",
+  description: "Discover handcrafted Anarkali suit sets, designer kurtas, Chanderi sarees & authentic Phulkari dupattas directly from Panipat, Haryana. Pan-India Cash on Delivery & Free Express Shipping available.",
   keywords: "Sai Collection, Panipat ethnic wear, Anarkali suits, designer kurtas, Indian fashion D2C, saicollectionpnp, festive wear, COD ethnic wear",
   icons: {
     icon: [
@@ -41,11 +41,16 @@ export const metadata: Metadata = {
   manifest: "/site.webmanifest",
   openGraph: {
     title: "Sai Collection — Panipat Handcrafted Indian Ethnic Wear",
-    description: "Premium handcrafted suit sets & ethnic fashion delivered to your doorstep. Direct from Panipat.",
+    description: "Discover handcrafted Anarkali suit sets, designer kurtas, Chanderi sarees & authentic Phulkari dupattas directly from Panipat, Haryana. Pan-India Cash on Delivery & Free Express Shipping available.",
     url: "https://saicollection.in",
     siteName: "Sai Collection",
     locale: "en_IN",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sai Collection — Panipat Ethnic Wear & Designer Suits",
+    description: "Discover handcrafted Anarkali suit sets, designer kurtas, Chanderi sarees & authentic Phulkari dupattas directly from Panipat, Haryana.",
   },
 };
 
